@@ -2,7 +2,10 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import Dashboard from "@/components/Dashboard";
 import InventoryList from "@/components/InventoryList";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import MedicationDatabase from "@/components/MedicationDatabase";
+import AlertsManager from "@/components/AlertsManager";
+import CustomerManagement from "@/components/CustomerManagement";
+import SystemSettings from "@/components/SystemSettings";
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -14,61 +17,13 @@ const Index = () => {
       case "inventory":
         return <InventoryList />;
       case "medications":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">Medications</h2>
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Medication Database</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Comprehensive medication management coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <MedicationDatabase />;
       case "alerts":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">Alerts & Notifications</h2>
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Alert Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Alert configuration and management coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <AlertsManager />;
       case "customers":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">Customer Management</h2>
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Customer Database</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Customer management system coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <CustomerManagement />;
       case "settings":
-        return (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-foreground">Settings</h2>
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">System configuration options coming soon...</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <SystemSettings />;
       default:
         return <Dashboard />;
     }
