@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { 
   Package, 
   AlertTriangle, 
@@ -9,69 +11,149 @@ import {
   ShoppingCart,
   Users,
   Clock,
-  CheckCircle
+  CheckCircle,
+  RefreshCw,
+  Plus
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const stats = [
+  const { toast } = useToast();
+  const [stats, setStats] = useState({
+    totalMedications: 0,
+    lowStockItems: 0,
+    totalCustomers: 0,
+    pendingOrders: 0,
+  });
+  const [recentAlerts, setRecentAlerts] = useState<any[]>([]);
+  const [lowStockItems, setLowStockItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch total medications
+      const { count: medicationCount } = await supabase
+        .from('medications')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch low stock items with medication details
+      const { data: lowStockData } = await supabase
+        .from('inventory')
+        .select(`
+          current_stock,
+          minimum_stock,
+          medications (
+            name
+          )
+        `)
+        .lt('current_stock', 'minimum_stock')
+        .limit(4);
+
+      // Fetch total customers
+      const { count: customerCount } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch pending orders
+      const { count: pendingOrdersCount } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      // Fetch recent alerts
+      const { data: alertsData } = await supabase
+        .from('alerts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      setStats({
+        totalMedications: medicationCount || 0,
+        lowStockItems: lowStockData?.length || 0,
+        totalCustomers: customerCount || 0,
+        pendingOrders: pendingOrdersCount || 0,
+      });
+
+      setRecentAlerts(alertsData || []);
+      setLowStockItems(lowStockData || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error loading dashboard data',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statsData = [
     {
       title: "Total Medications",
-      value: "1,247",
-      change: "+12%",
-      trend: "up",
+      value: stats.totalMedications.toString(),
       icon: Package,
       color: "text-primary"
     },
     {
       title: "Low Stock Items",
-      value: "23",
-      change: "-5%",
-      trend: "down",
+      value: stats.lowStockItems.toString(),
       icon: AlertTriangle,
       color: "text-warning"
     },
     {
-      title: "Orders Today",
-      value: "156",
-      change: "+8%",
-      trend: "up",
-      icon: ShoppingCart,
+      title: "Total Customers",
+      value: stats.totalCustomers.toString(),
+      icon: Users,
       color: "text-secondary"
     },
     {
-      title: "Revenue",
-      value: "$12,890",
-      change: "+15%",
-      trend: "up",
-      icon: DollarSign,
+      title: "Pending Orders",
+      value: stats.pendingOrders.toString(),
+      icon: ShoppingCart,
       color: "text-success"
     }
   ];
 
-  const recentActivities = [
-    { action: "Stock updated", item: "Paracetamol 500mg", time: "2 min ago", status: "success" },
-    { action: "Low stock alert", item: "Amoxicillin 250mg", time: "15 min ago", status: "warning" },
-    { action: "Order fulfilled", item: "Insulin Pen", time: "1 hour ago", status: "success" },
-    { action: "New medication added", item: "Vitamin D3", time: "2 hours ago", status: "info" },
-  ];
-
-  const lowStockItems = [
-    { name: "Amoxicillin 250mg", current: 15, minimum: 50, percentage: 30 },
-    { name: "Insulin Pen", current: 8, minimum: 25, percentage: 32 },
-    { name: "Blood Pressure Monitor", current: 3, minimum: 10, percentage: 30 },
-    { name: "Cough Syrup", current: 12, minimum: 30, percentage: 40 },
-  ];
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical': return 'bg-red-100 text-red-800 border-red-300';
+      case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening with your pharmacy.</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening with your pharmacy.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchDashboardData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Quick Action
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
+        {statsData.map((stat) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.title} className="shadow-card">
@@ -82,13 +164,13 @@ const Dashboard = () => {
                 <Icon className={`h-5 w-5 ${stat.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
-                  <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
-                    {stat.change}
-                  </span>
-                  {" "}from last month
-                </p>
+                <div className="text-2xl font-bold text-foreground">
+                  {loading ? (
+                    <div className="h-8 w-16 bg-muted animate-pulse rounded"></div>
+                  ) : (
+                    stat.value
+                  )}
+                </div>
               </CardContent>
             </Card>
           );
@@ -104,46 +186,98 @@ const Dashboard = () => {
               Low Stock Alerts
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {lowStockItems.map((item, index) => (
-              <div key={index} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">{item.name}</span>
-                  <Badge variant="outline" className="text-warning border-warning">
-                    {item.current}/{item.minimum}
-                  </Badge>
-                </div>
-                <Progress value={item.percentage} className="h-2" />
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="h-4 w-32 bg-muted animate-pulse rounded"></div>
+                      <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                    </div>
+                    <div className="h-2 w-full bg-muted animate-pulse rounded"></div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : lowStockItems.length > 0 ? (
+              <div className="space-y-4">
+                {lowStockItems.map((item, index) => {
+                  const percentage = (item.current_stock / item.minimum_stock) * 100;
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">
+                          {item.medications?.name || 'Unknown Medication'}
+                        </span>
+                        <Badge variant="outline" className="text-warning border-warning">
+                          {item.current_stock}/{item.minimum_stock}
+                        </Badge>
+                      </div>
+                      <Progress value={Math.min(percentage, 100)} className="h-2" />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
+                <p className="text-muted-foreground">All items are well stocked</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activities */}
+        {/* Recent Alerts */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              Recent Activities
+              Recent Alerts
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start gap-3">
-                <div className={`mt-1 h-2 w-2 rounded-full ${
-                  activity.status === "success" ? "bg-success" :
-                  activity.status === "warning" ? "bg-warning" :
-                  "bg-primary"
-                }`} />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm text-foreground">
-                    <span className="font-medium">{activity.action}</span>
-                    {" "}• {activity.item}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{activity.time}</p>
-                </div>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-muted animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-full bg-muted animate-pulse rounded"></div>
+                      <div className="h-3 w-20 bg-muted animate-pulse rounded"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : recentAlerts.length > 0 ? (
+              <div className="space-y-4">
+                {recentAlerts.map((alert) => (
+                  <div key={alert.id} className="flex items-start gap-3">
+                    <div className={`mt-1 h-2 w-2 rounded-full ${
+                      alert.severity === "critical" ? "bg-red-500" :
+                      alert.severity === "high" ? "bg-orange-500" :
+                      alert.severity === "medium" ? "bg-yellow-500" :
+                      "bg-blue-500"
+                    }`} />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge className={getSeverityColor(alert.severity)}>
+                          {alert.type}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-foreground">{alert.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(alert.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
+                <p className="text-muted-foreground">No recent alerts</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -155,29 +289,29 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-              <Package className="h-8 w-8 text-primary" />
+            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+              <Package className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Add Medication</p>
                 <p className="text-sm text-muted-foreground">Add new stock</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-              <TrendingUp className="h-8 w-8 text-secondary" />
+            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+              <TrendingUp className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Generate Report</p>
                 <p className="text-sm text-muted-foreground">View analytics</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-              <Users className="h-8 w-8 text-success" />
+            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+              <Users className="h-8 w-8 text-success group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Manage Customers</p>
                 <p className="text-sm text-muted-foreground">Customer database</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors">
-              <CheckCircle className="h-8 w-8 text-medical-green" />
+            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+              <CheckCircle className="h-8 w-8 text-medical-green group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Process Orders</p>
                 <p className="text-sm text-muted-foreground">Fulfill orders</p>
