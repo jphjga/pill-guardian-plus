@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,74 +9,49 @@ import { Search, Plus, Edit, Eye, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const InventoryList = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [inventory, setInventory] = useState<any[]>([]);
 
-  const medications = [
-    {
-      id: "MED001",
-      name: "Paracetamol 500mg",
-      category: "Pain Relief",
-      brand: "Generic",
-      stock: 150,
-      minimumStock: 50,
-      price: 12.99,
-      expiryDate: "2025-12-15",
-      batchNumber: "PAR001",
-      status: "In Stock"
-    },
-    {
-      id: "MED002",
-      name: "Amoxicillin 250mg",
-      category: "Antibiotics",
-      brand: "Amoxil",
-      stock: 15,
-      minimumStock: 50,
-      price: 24.50,
-      expiryDate: "2024-08-20",
-      batchNumber: "AMX002",
-      status: "Low Stock"
-    },
-    {
-      id: "MED003",
-      name: "Insulin Pen",
-      category: "Diabetes",
-      brand: "NovoRapid",
-      stock: 8,
-      minimumStock: 25,
-      price: 89.99,
-      expiryDate: "2024-06-30",
-      batchNumber: "INS003",
-      status: "Critical"
-    },
-    {
-      id: "MED004",
-      name: "Vitamin D3 1000IU",
-      category: "Vitamins",
-      brand: "Nature's Own",
-      stock: 200,
-      minimumStock: 30,
-      price: 18.75,
-      expiryDate: "2026-03-10",
-      batchNumber: "VIT004",
-      status: "In Stock"
-    },
-    {
-      id: "MED005",
-      name: "Blood Pressure Monitor",
-      category: "Medical Devices",
-      brand: "Omron",
-      stock: 3,
-      minimumStock: 10,
-      price: 125.00,
-      expiryDate: "N/A",
-      batchNumber: "BPM005",
-      status: "Critical"
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('inventory')
+        .select(`
+          *,
+          medications (
+            name,
+            brand_name,
+            category,
+            price,
+            expiry_date
+          )
+        `);
+
+      if (error) throw error;
+      setInventory(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Error loading inventory',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStockStatus = (stock: number, minimum: number) => {
     if (stock <= minimum * 0.3) return "Critical";
@@ -93,9 +68,9 @@ const InventoryList = () => {
     }
   };
 
-  const filteredMedications = medications.filter(med => 
-    med.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterCategory === "all" || med.category === filterCategory)
+  const filteredInventory = inventory.filter(item => 
+    item.medications?.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (filterCategory === "all" || item.medications?.category === filterCategory)
   );
 
   return (
@@ -233,52 +208,74 @@ const InventoryList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMedications.map((medication) => (
-                <TableRow key={medication.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-foreground">{medication.name}</div>
-                      <div className="text-sm text-muted-foreground">{medication.brand}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{medication.category}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium text-foreground">{medication.stock} units</div>
-                      <div className="text-xs text-muted-foreground">
-                        Min: {medication.minimumStock}
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><div className="h-10 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-6 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-10 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-6 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-6 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-6 bg-muted animate-pulse rounded"></div></TableCell>
+                    <TableCell><div className="h-8 bg-muted animate-pulse rounded"></div></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredInventory.length > 0 ? (
+                filteredInventory.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium text-foreground">{item.medications?.name || 'Unknown Medication'}</div>
+                        <div className="text-sm text-muted-foreground">{item.medications?.brand_name || 'Generic'}</div>
                       </div>
-                      {medication.stock <= medication.minimumStock && (
-                        <div className="flex items-center gap-1 text-xs text-warning">
-                          <AlertTriangle className="h-3 w-3" />
-                          Low Stock
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.medications?.category || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium text-foreground">{item.current_stock} units</div>
+                        <div className="text-xs text-muted-foreground">
+                          Min: {item.minimum_stock}
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium text-foreground">
-                    ${medication.price.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-foreground">{medication.expiryDate}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(getStockStatus(medication.stock, medication.minimumStock))}>
-                      {getStockStatus(medication.stock, medication.minimumStock)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        {item.current_stock <= item.minimum_stock && (
+                          <div className="flex items-center gap-1 text-xs text-warning">
+                            <AlertTriangle className="h-3 w-3" />
+                            Low Stock
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-foreground">
+                      ${item.medications?.price ? Number(item.medications.price).toFixed(2) : '0.00'}
+                    </TableCell>
+                    <TableCell className="text-foreground">
+                      {item.medications?.expiry_date ? new Date(item.medications.expiry_date).toLocaleDateString() : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(getStockStatus(item.current_stock, item.minimum_stock))}>
+                        {getStockStatus(item.current_stock, item.minimum_stock)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    <div className="text-muted-foreground">No inventory items found</div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>

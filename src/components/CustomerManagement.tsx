@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,64 +15,64 @@ import {
   Edit,
   ShoppingBag
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const CustomerManagement = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const customers = [
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john.smith@email.com",
-      phone: "+1 (555) 123-4567",
-      address: "123 Main St, Anytown, ST 12345",
-      dateOfBirth: "1985-03-15",
-      joinDate: "2023-06-15",
-      totalOrders: 24,
-      totalSpent: 1250.75,
-      status: "active",
-      lastOrder: "2024-01-10"
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      email: "sarah.j@email.com",
-      phone: "+1 (555) 987-6543",
-      address: "456 Oak Ave, Springfield, ST 67890",
-      dateOfBirth: "1978-11-22",
-      joinDate: "2023-08-20",
-      totalOrders: 15,
-      totalSpent: 890.50,
-      status: "active",
-      lastOrder: "2024-01-08"
-    },
-    {
-      id: 3,
-      name: "Michael Brown",
-      email: "m.brown@email.com",
-      phone: "+1 (555) 456-7890",
-      address: "789 Pine Rd, Riverside, ST 13579",
-      dateOfBirth: "1990-07-08",
-      joinDate: "2023-03-10",
-      totalOrders: 8,
-      totalSpent: 425.25,
-      status: "inactive",
-      lastOrder: "2023-12-15"
-    },
-    {
-      id: 4,
-      name: "Emily Davis",
-      email: "emily.davis@email.com",
-      phone: "+1 (555) 234-5678",
-      address: "321 Elm St, Lakeside, ST 24680",
-      dateOfBirth: "1992-09-30",
-      joinDate: "2023-11-05",
-      totalOrders: 32,
-      totalSpent: 1875.90,
-      status: "premium",
-      lastOrder: "2024-01-12"
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('customers')
+        .select(`
+          *,
+          orders (
+            id,
+            total_amount,
+            created_at
+          )
+        `);
+
+      if (error) throw error;
+      
+      // Calculate customer statistics
+      const customersWithStats = (data || []).map(customer => {
+        const orders = customer.orders || [];
+        const totalOrders = orders.length;
+        const totalSpent = orders.reduce((sum: number, order: any) => sum + (Number(order.total_amount) || 0), 0);
+        const lastOrder = orders.length > 0 ? orders.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].created_at : null;
+        
+        return {
+          ...customer,
+          name: `${customer.first_name} ${customer.last_name}`,
+          joinDate: new Date(customer.created_at).toLocaleDateString(),
+          totalOrders,
+          totalSpent,
+          lastOrder: lastOrder ? new Date(lastOrder).toLocaleDateString() : 'Never',
+          status: totalOrders > 20 ? 'premium' : totalOrders > 0 ? 'active' : 'inactive'
+        };
+      });
+      
+      setCustomers(customersWithStats);
+    } catch (error: any) {
+      toast({
+        title: 'Error loading customers',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,9 +84,9 @@ const CustomerManagement = () => {
   };
 
   const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm)
+    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.phone?.includes(searchTerm)
   );
 
   return (
@@ -184,7 +184,28 @@ const CustomerManagement = () => {
 
       {/* Customer List */}
       <div className="grid gap-4">
-        {filteredCustomers.map((customer) => (
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="shadow-card">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-muted animate-pulse"></div>
+                    <div className="space-y-2">
+                      <div className="h-5 w-32 bg-muted animate-pulse rounded"></div>
+                      <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <div className="h-4 bg-muted animate-pulse rounded"></div>
+                    <div className="h-4 bg-muted animate-pulse rounded"></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : filteredCustomers.length > 0 ? (
+          filteredCustomers.map((customer) => (
           <Card key={customer.id} className="shadow-card hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <div className="flex items-start justify-between mb-4">
@@ -204,22 +225,22 @@ const CustomerManagement = () => {
                 </Badge>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{customer.email}</span>
+                  <span className="text-foreground">{customer.email || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{customer.phone}</span>
+                  <span className="text-foreground">{customer.phone || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground truncate">{customer.address}</span>
+                  <span className="text-foreground truncate">{customer.address || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">Born {customer.dateOfBirth}</span>
+                  <span className="text-foreground">Born {customer.date_of_birth ? new Date(customer.date_of_birth).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
 
@@ -230,7 +251,7 @@ const CustomerManagement = () => {
                 </div>
                 <div className="bg-muted/50 p-3 rounded-lg">
                   <p className="text-sm text-muted-foreground">Total Spent</p>
-                  <p className="text-lg font-semibold text-foreground">${customer.totalSpent}</p>
+                  <p className="text-lg font-semibold text-foreground">${customer.totalSpent.toFixed(2)}</p>
                 </div>
                 <div className="bg-muted/50 p-3 rounded-lg">
                   <p className="text-sm text-muted-foreground">Last Order</p>
@@ -254,7 +275,16 @@ const CustomerManagement = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+        ))
+        ) : (
+          <Card className="shadow-card">
+            <CardContent className="py-12 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No customers found</h3>
+              <p className="text-muted-foreground">Try adjusting your search terms or add new customers to the system.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {filteredCustomers.length === 0 && (

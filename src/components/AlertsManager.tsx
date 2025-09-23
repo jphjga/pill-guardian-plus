@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,50 +14,81 @@ import {
   XCircle,
   Plus
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AlertsManager = () => {
-  const alerts = [
-    {
-      id: 1,
-      type: "low_stock",
-      title: "Low Stock Alert",
-      message: "Amoxicillin 250mg is running low (15 units remaining)",
-      priority: "high",
-      timestamp: "2024-01-15 14:30",
-      status: "active",
-      medication: "Amoxicillin 250mg"
-    },
-    {
-      id: 2,
-      type: "expiry",
-      title: "Expiry Warning",
-      message: "5 medications expiring within 30 days",
-      priority: "medium",
-      timestamp: "2024-01-15 09:15",
-      status: "active",
-      medication: "Multiple items"
-    },
-    {
-      id: 3,
-      type: "order",
-      title: "Order Fulfilled",
-      message: "Order #12345 has been successfully processed",
-      priority: "low",
-      timestamp: "2024-01-15 08:45",
-      status: "resolved",
-      medication: "Insulin Pen"
-    },
-    {
-      id: 4,
-      type: "system",
-      title: "System Backup",
-      message: "Daily backup completed successfully",
-      priority: "low",
-      timestamp: "2024-01-15 02:00",
-      status: "resolved",
-      medication: "N/A"
+  const { toast } = useToast();
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('alerts')
+        .select(`
+          *,
+          medications (
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const alertsWithFormatting = (data || []).map(alert => ({
+        ...alert,
+        priority: alert.severity || 'medium',
+        timestamp: new Date(alert.created_at).toLocaleString(),
+        status: alert.is_read ? 'resolved' : 'active',
+        medication: alert.medications?.name || 'N/A'
+      }));
+      
+      setAlerts(alertsWithFormatting);
+    } catch (error: any) {
+      toast({
+        title: 'Error loading alerts',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const resolveAlert = async (alertId: string) => {
+    try {
+      const { error } = await supabase
+        .from('alerts')
+        .update({ is_read: true })
+        .eq('id', alertId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setAlerts(alerts.map(alert => 
+        alert.id === alertId 
+          ? { ...alert, status: 'resolved', is_read: true }
+          : alert
+      ));
+      
+      toast({
+        title: 'Alert resolved',
+        description: 'The alert has been marked as resolved.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error resolving alert',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
 
   const alertRules = [
     {
@@ -183,7 +215,18 @@ const AlertsManager = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {activeAlerts.map((alert) => {
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-3 rounded-lg border space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="h-5 w-32 bg-muted animate-pulse rounded"></div>
+                    <div className="h-6 w-16 bg-muted animate-pulse rounded"></div>
+                  </div>
+                  <div className="h-4 w-full bg-muted animate-pulse rounded"></div>
+                  <div className="h-4 w-24 bg-muted animate-pulse rounded"></div>
+                </div>
+              ))
+            ) : activeAlerts.map((alert) => {
               const Icon = getAlertIcon(alert.type);
               return (
                 <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg border">
@@ -204,11 +247,11 @@ const AlertsManager = () => {
                       <span>{alert.medication}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => resolveAlert(alert.id)}>
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Resolve
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => resolveAlert(alert.id)}>
                         <XCircle className="h-3 w-3 mr-1" />
                         Dismiss
                       </Button>
