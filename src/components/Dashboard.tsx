@@ -18,7 +18,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const Dashboard = () => {
+interface DashboardProps {
+  onPageChange: (page: string) => void;
+}
+
+const Dashboard = ({ onPageChange }: DashboardProps) => {
   const { toast } = useToast();
   const [stats, setStats] = useState({
     totalMedications: 0,
@@ -289,28 +293,40 @@ const Dashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+            <div 
+              onClick={() => onPageChange('inventory')}
+              className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group"
+            >
               <Package className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Add Medication</p>
                 <p className="text-sm text-muted-foreground">Add new stock</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+            <div 
+              onClick={() => onPageChange('reports')}
+              className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group"
+            >
               <TrendingUp className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Generate Report</p>
                 <p className="text-sm text-muted-foreground">View analytics</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+            <div 
+              onClick={() => onPageChange('customers')}
+              className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group"
+            >
               <Users className="h-8 w-8 text-success group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Manage Customers</p>
                 <p className="text-sm text-muted-foreground">Customer database</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group">
+            <div 
+              onClick={() => onPageChange('orders')}
+              className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group"
+            >
               <CheckCircle className="h-8 w-8 text-medical-green group-hover:scale-110 transition-transform" />
               <div>
                 <p className="font-medium text-foreground">Process Orders</p>

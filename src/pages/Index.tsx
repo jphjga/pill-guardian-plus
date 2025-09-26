@@ -8,6 +8,7 @@ import MedicationDatabase from "@/components/MedicationDatabase";
 import AlertsManager from "@/components/AlertsManager";
 import CustomerManagement from "@/components/CustomerManagement";
 import SystemSettings from "@/components/SystemSettings";
+import OrdersManager from "@/components/OrdersManager";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -38,7 +39,7 @@ const Index = () => {
   const renderPage = () => {
     switch (currentPage) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard onPageChange={setCurrentPage} />;
       case "inventory":
         return <InventoryList />;
       case "medications":
@@ -47,10 +48,12 @@ const Index = () => {
         return <AlertsManager />;
       case "customers":
         return <CustomerManagement />;
+      case "orders":
+        return <OrdersManager />;
       case "settings":
         return <SystemSettings />;
       default:
-        return <Dashboard />;
+        return <Dashboard onPageChange={setCurrentPage} />;
     }
   };
 

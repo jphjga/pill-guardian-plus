@@ -6,17 +6,20 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Plus, Edit, Eye, AlertTriangle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AddMedicationDialog from "./AddMedicationDialog";
+import EditStockDialog from "./EditStockDialog";
+import ViewMedicationDialog from "./ViewMedicationDialog";
 
 const InventoryList = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [inventory, setInventory] = useState<any[]>([]);
 
@@ -81,83 +84,30 @@ const InventoryList = () => {
           <p className="text-muted-foreground">Manage your medication stock and inventory</p>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-primary">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Medication
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Add New Medication</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Medication Name</Label>
-                  <Input id="name" placeholder="Enter medication name" />
-                </div>
-                <div>
-                  <Label htmlFor="brand">Brand</Label>
-                  <Input id="brand" placeholder="Enter brand name" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pain-relief">Pain Relief</SelectItem>
-                      <SelectItem value="antibiotics">Antibiotics</SelectItem>
-                      <SelectItem value="diabetes">Diabetes</SelectItem>
-                      <SelectItem value="vitamins">Vitamins</SelectItem>
-                      <SelectItem value="medical-devices">Medical Devices</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="price">Unit Price ($)</Label>
-                  <Input id="price" type="number" placeholder="0.00" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="stock">Current Stock</Label>
-                  <Input id="stock" type="number" placeholder="0" />
-                </div>
-                <div>
-                  <Label htmlFor="minimum">Minimum Stock</Label>
-                  <Input id="minimum" type="number" placeholder="0" />
-                </div>
-                <div>
-                  <Label htmlFor="expiry">Expiry Date</Label>
-                  <Input id="expiry" type="date" />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="batch">Batch Number</Label>
-                <Input id="batch" placeholder="Enter batch number" />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Enter medication description..." />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button className="bg-gradient-primary">
-                Add Medication
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-gradient-primary">
+          <Plus className="mr-2 h-4 w-4" />
+          Add Medication
+        </Button>
       </div>
+
+      <AddMedicationDialog 
+        open={isAddDialogOpen} 
+        onOpenChange={setIsAddDialogOpen}
+        onSuccess={fetchInventory}
+      />
+
+      <EditStockDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={fetchInventory}
+        inventoryItem={selectedItem}
+      />
+
+      <ViewMedicationDialog
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        inventoryItem={selectedItem}
+      />
 
       {/* Filters */}
       <Card className="shadow-card">
@@ -259,10 +209,24 @@ const InventoryList = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setIsViewDialogOpen(true);
+                          }}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>

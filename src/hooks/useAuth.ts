@@ -68,6 +68,12 @@ export const useAuthProvider = () => {
       email,
       password,
     });
+    
+    if (!error) {
+      // Successfully signed in, redirect will happen through auth state change
+      window.location.href = '/';
+    }
+    
     return { error };
   };
 
