@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
   User, 
@@ -20,6 +22,38 @@ import {
 } from "lucide-react";
 
 const SystemSettings = () => {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<any>({});
+  
+  const handleSettingChange = (categoryId: string, settingName: string, value: any) => {
+    setSettings((prev: any) => ({
+      ...prev,
+      [`${categoryId}_${settingName}`]: value
+    }));
+  };
+
+  const handleSaveSettings = () => {
+    toast({
+      title: 'Settings Saved',
+      description: 'All settings have been saved successfully.',
+    });
+  };
+
+  const handleResetSettings = () => {
+    setSettings({});
+    toast({
+      title: 'Settings Reset',
+      description: 'All settings have been reset to defaults.',
+    });
+  };
+
+  const handleDataAction = (action: string) => {
+    toast({
+      title: `${action} Started`,
+      description: `${action} operation has been initiated.`,
+    });
+  };
+
   const settingsCategories = [
     {
       id: "general",
@@ -172,11 +206,11 @@ const SystemSettings = () => {
           <p className="text-muted-foreground">Configure system preferences and security</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleResetSettings}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Reset to Defaults
           </Button>
-          <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90">
+          <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90" onClick={handleSaveSettings}>
             <Save className="h-4 w-4 mr-2" />
             Save All Changes
           </Button>
@@ -239,26 +273,29 @@ const SystemSettings = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         {setting.type === "toggle" && (
-                          <Switch checked={setting.value as boolean} />
+                          <Switch 
+                            checked={settings[`${category.id}_${setting.name}`] ?? setting.value as boolean}
+                            onCheckedChange={(value) => handleSettingChange(category.id, setting.name, value)}
+                          />
                         )}
                         {setting.type === "text" && (
                           <Input
-                            value={setting.value as string}
+                            value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
                             className="w-48"
-                            readOnly
+                            onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
                           />
                         )}
                         {setting.type === "number" && (
                           <Input
                             type="number"
-                            value={setting.value as string}
+                            value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
                             className="w-24"
-                            readOnly
+                            onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
                           />
                         )}
                         {setting.type === "select" && (
                           <Badge variant="outline" className="min-w-20 justify-center">
-                            {setting.value as string}
+                            {settings[`${category.id}_${setting.name}`] ?? setting.value as string}
                           </Badge>
                         )}
                       </div>
@@ -281,19 +318,19 @@ const SystemSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button variant="outline" className="h-20 flex-col gap-2">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Export')}>
               <Download className="h-6 w-6" />
               Export Data
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Import')}>
               <Upload className="h-6 w-6" />
               Import Data
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Backup')}>
               <RefreshCw className="h-6 w-6" />
               Create Backup
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+            <Button variant="outline" className="h-20 flex-col gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleDataAction('Clear Cache')}>
               <Trash2 className="h-6 w-6" />
               Clear Cache
             </Button>

@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Users, 
   Search, 
-  Plus, 
   Phone, 
   Mail,
   MapPin,
@@ -17,12 +16,19 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ViewCustomerProfileDialog from "./ViewCustomerProfileDialog";
+import EditCustomerDialog from "./EditCustomerDialog";
+import CustomerOrderHistoryDialog from "./CustomerOrderHistoryDialog";
 
 const CustomerManagement = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showOrderHistoryDialog, setShowOrderHistoryDialog] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -96,10 +102,6 @@ const CustomerManagement = () => {
           <h2 className="text-3xl font-bold text-foreground">Customer Management</h2>
           <p className="text-muted-foreground">Manage customer information and order history</p>
         </div>
-        <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Customer
-        </Button>
       </div>
 
       {/* Customer Stats */}
@@ -260,15 +262,36 @@ const CustomerManagement = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCustomer(customer);
+                    setShowProfileDialog(true);
+                  }}
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Profile
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCustomer(customer);
+                    setShowEditDialog(true);
+                  }}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Details
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCustomer(customer);
+                    setShowOrderHistoryDialog(true);
+                  }}
+                >
                   <ShoppingBag className="h-4 w-4 mr-2" />
                   Order History
                 </Button>
@@ -287,7 +310,7 @@ const CustomerManagement = () => {
         )}
       </div>
 
-      {filteredCustomers.length === 0 && (
+      {filteredCustomers.length === 0 && !loading && (
         <Card className="shadow-card">
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -296,6 +319,25 @@ const CustomerManagement = () => {
           </CardContent>
         </Card>
       )}
+
+      <ViewCustomerProfileDialog
+        open={showProfileDialog}
+        onOpenChange={setShowProfileDialog}
+        customer={selectedCustomer}
+      />
+
+      <EditCustomerDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        customer={selectedCustomer}
+        onSuccess={fetchCustomers}
+      />
+
+      <CustomerOrderHistoryDialog
+        open={showOrderHistoryDialog}
+        onOpenChange={setShowOrderHistoryDialog}
+        customer={selectedCustomer}
+      />
     </div>
   );
 };

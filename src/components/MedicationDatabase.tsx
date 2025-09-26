@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Pill, 
   Search, 
-  Plus, 
   Filter,
   Eye,
   Calendar,
@@ -15,12 +14,17 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ViewMedicationDetailsDialog from "./ViewMedicationDetailsDialog";
+import UpdateStockDialog from "./UpdateStockDialog";
 
 const MedicationDatabase = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [medications, setMedications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMedication, setSelectedMedication] = useState<any>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showStockDialog, setShowStockDialog] = useState(false);
 
   useEffect(() => {
     fetchMedications();
@@ -89,10 +93,6 @@ const MedicationDatabase = () => {
           <h2 className="text-3xl font-bold text-foreground">Medication Database</h2>
           <p className="text-muted-foreground">Comprehensive medication catalog and management</p>
         </div>
-        <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Medication
-        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -198,11 +198,27 @@ const MedicationDatabase = () => {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedMedication(medication);
+                      setShowDetailsDialog(true);
+                    }}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedMedication(medication);
+                      setShowStockDialog(true);
+                    }}
+                  >
                     <Clock className="h-4 w-4 mr-2" />
                     Update Stock
                   </Button>
@@ -222,6 +238,19 @@ const MedicationDatabase = () => {
           </CardContent>
         </Card>
       )}
+
+      <ViewMedicationDetailsDialog
+        open={showDetailsDialog}
+        onOpenChange={setShowDetailsDialog}
+        medication={selectedMedication}
+      />
+
+      <UpdateStockDialog
+        open={showStockDialog}
+        onOpenChange={setShowStockDialog}
+        medication={selectedMedication}
+        onSuccess={fetchMedications}
+      />
     </div>
   );
 };
