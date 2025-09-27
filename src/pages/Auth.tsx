@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pill, Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pill, Building2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const { signIn, signUp } = useAuth();
@@ -22,9 +24,13 @@ const Auth = () => {
     password: '',
     fullName: '',
     organization: '',
+    role: '',
+    isNewOrganization: false,
   });
   
   const [loading, setLoading] = useState(false);
+  const [existingOrganizations, setExistingOrganizations] = useState<string[]>([]);
+  const [showCustomOrganization, setShowCustomOrganization] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +49,23 @@ const Auth = () => {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('organization')
+        .not('organization', 'is', null)
+        .neq('organization', '');
+      
+      if (data) {
+        const orgs = [...new Set(data.map(item => item.organization).filter(Boolean))];
+        setExistingOrganizations(orgs);
+      }
+    };
+    
+    fetchOrganizations();
+  }, []);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -51,7 +74,8 @@ const Auth = () => {
       signUpData.email, 
       signUpData.password, 
       signUpData.fullName, 
-      signUpData.organization
+      signUpData.organization,
+      signUpData.role || (signUpData.isNewOrganization ? 'administrator' : 'pharmacist')
     );
     
     if (error) {
@@ -68,6 +92,26 @@ const Auth = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleOrganizationChange = (value: string) => {
+    if (value === 'new-organization') {
+      setShowCustomOrganization(true);
+      setSignUpData({ 
+        ...signUpData, 
+        organization: '',
+        isNewOrganization: true,
+        role: 'administrator'
+      });
+    } else {
+      setShowCustomOrganization(false);
+      setSignUpData({ 
+        ...signUpData, 
+        organization: value,
+        isNewOrganization: false,
+        role: ''
+      });
+    }
   };
 
   return (
@@ -141,19 +185,72 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-organization">Organization</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-organization"
-                        type="text"
-                        placeholder="Enter your pharmacy name"
-                        className="pl-10"
-                        value={signUpData.organization}
-                        onChange={(e) => setSignUpData({ ...signUpData, organization: e.target.value })}
-                        required
-                      />
+                    <Label>Organization</Label>
+                    <Select onValueChange={handleOrganizationChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select or create organization" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {existingOrganizations.map((org) => (
+                          <SelectItem key={org} value={org}>
+                            <div className="flex items-center">
+                              <Building2 className="h-4 w-4 mr-2" />
+                              {org}
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="new-organization">
+                          <div className="flex items-center">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create New Organization
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {showCustomOrganization && (
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-organization">New Organization Name</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="signup-organization"
+                          type="text"
+                          placeholder="Enter your pharmacy name"
+                          className="pl-10"
+                          value={signUpData.organization}
+                          onChange={(e) => setSignUpData({ ...signUpData, organization: e.target.value })}
+                          required
+                        />
+                      </div>
                     </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Role</Label>
+                    {signUpData.isNewOrganization ? (
+                      <div className="p-3 bg-muted rounded-md">
+                        <p className="text-sm text-muted-foreground">
+                          As the creator of a new organization, you will be assigned the Administrator role.
+                        </p>
+                      </div>
+                    ) : (
+                      <Select 
+                        value={signUpData.role} 
+                        onValueChange={(value) => setSignUpData({ ...signUpData, role: value })}
+                        disabled={!signUpData.organization || signUpData.isNewOrganization}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pharmacist">Pharmacist</SelectItem>
+                          <SelectItem value="technician">Pharmacy Technician</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -177,7 +274,11 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading || !signUpData.organization || (!signUpData.isNewOrganization && !signUpData.role)}
+                  >
                     {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
