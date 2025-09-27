@@ -354,6 +354,57 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_requests: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          from_role: string
+          id: string
+          organization: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          requested_by_email: string
+          requested_by_name: string
+          status: string
+          to_role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          from_role: string
+          id?: string
+          organization: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_by_email: string
+          requested_by_name: string
+          status?: string
+          to_role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          from_role?: string
+          id?: string
+          organization?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          requested_by_email?: string
+          requested_by_name?: string
+          status?: string
+          to_role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,8 +1,10 @@
-import { Pill, Package, AlertTriangle, TrendingUp, Users, Settings, Bell, User } from "lucide-react";
+import { Pill, Package, AlertTriangle, TrendingUp, Users, Settings, Bell, User, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +15,23 @@ interface LayoutProps {
 const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
+        
+        setUserRole(data?.role || null);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
   
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: TrendingUp },
@@ -20,6 +39,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
     { id: "medications", label: "Medications", icon: Pill },
     { id: "alerts", label: "Alerts", icon: AlertTriangle },
     { id: "customers", label: "Customers", icon: Users },
+    ...(userRole === 'administrator' ? [{ id: "role-requests", label: "Role Requests", icon: UserCog }] : []),
     { id: "settings", label: "Settings", icon: Settings },
   ];
 

@@ -9,6 +9,7 @@ import AlertsManager from "@/components/AlertsManager";
 import CustomerManagement from "@/components/CustomerManagement";
 import SystemSettings from "@/components/SystemSettings";
 import OrdersManager from "@/components/OrdersManager";
+import AdminRoleRequests from "@/components/AdminRoleRequests";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -50,6 +51,8 @@ const Index = () => {
         return <CustomerManagement />;
       case "orders":
         return <OrdersManager />;
+      case "role-requests":
+        return <AdminRoleRequests />;
       case "settings":
         return <SystemSettings />;
       default:
