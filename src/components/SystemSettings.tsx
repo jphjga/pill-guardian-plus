@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import AdminRoleRequestsManager from '@/components/AdminRoleRequestsManager';
 import { 
   Settings, 
   User, 
@@ -18,12 +21,42 @@ import {
   RefreshCw,
   Lock,
   Eye,
-  Mail
+  Mail,
+  UserCog
 } from "lucide-react";
 
 const SystemSettings = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [settings, setSettings] = useState<any>({});
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('system');
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const isAdmin = userProfile?.role === 'administrator';
   
   const handleSettingChange = (categoryId: string, settingName: string, value: any) => {
     setSettings((prev: any) => ({
@@ -217,170 +250,208 @@ const SystemSettings = () => {
         </div>
       </div>
 
-      {/* System Info */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-primary" />
-            System Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-5">
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Version</p>
-              <p className="font-semibold text-foreground">{systemInfo.version}</p>
-            </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Last Backup</p>
-              <p className="font-semibold text-foreground text-xs">{systemInfo.lastBackup}</p>
-            </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Active Users</p>
-              <p className="font-semibold text-foreground">{systemInfo.totalUsers}</p>
-            </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Storage Used</p>
-              <p className="font-semibold text-foreground">{systemInfo.storageUsed}</p>
-            </div>
-            <div className="text-center p-3 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Uptime</p>
-              <p className="font-semibold text-success">{systemInfo.uptime}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Settings Categories */}
-      <div className="grid gap-6">
-        {settingsCategories.map((category) => {
-          const Icon = category.icon;
-          return (
-            <Card key={category.id} className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                  {category.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {category.settings.map((setting, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
-                      <div className="space-y-1">
-                        <h4 className="font-medium text-foreground">{setting.name}</h4>
-                        <p className="text-sm text-muted-foreground">{setting.description}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {setting.type === "toggle" && (
-                          <Switch 
-                            checked={settings[`${category.id}_${setting.name}`] ?? setting.value as boolean}
-                            onCheckedChange={(value) => handleSettingChange(category.id, setting.name, value)}
-                          />
-                        )}
-                        {setting.type === "text" && (
-                          <Input
-                            value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
-                            className="w-48"
-                            onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
-                          />
-                        )}
-                        {setting.type === "number" && (
-                          <Input
-                            type="number"
-                            value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
-                            className="w-24"
-                            onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
-                          />
-                        )}
-                        {setting.type === "select" && (
-                          <Badge variant="outline" className="min-w-20 justify-center">
-                            {settings[`${category.id}_${setting.name}`] ?? setting.value as string}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b">
+        <Button
+          variant={activeTab === 'system' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('system')}
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          System
+        </Button>
+        {isAdmin && (
+          <Button
+            variant={activeTab === 'role-requests' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('role-requests')}
+          >
+            <UserCog className="h-4 w-4 mr-2" />
+            Role Requests
+          </Button>
+        )}
       </div>
 
-      {/* Data Management */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-primary" />
-            Data Management
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Export')}>
-              <Download className="h-6 w-6" />
-              Export Data
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Import')}>
-              <Upload className="h-6 w-6" />
-              Import Data
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Backup')}>
-              <RefreshCw className="h-6 w-6" />
-              Create Backup
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleDataAction('Clear Cache')}>
-              <Trash2 className="h-6 w-6" />
-              Clear Cache
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {activeTab === 'system' && (
+        <>
+          {/* System Info */}
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                System Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-5">
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Version</p>
+                  <p className="font-semibold text-foreground">{systemInfo.version}</p>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Last Backup</p>
+                  <p className="font-semibold text-foreground text-xs">{systemInfo.lastBackup}</p>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Active Users</p>
+                  <p className="font-semibold text-foreground">{systemInfo.totalUsers}</p>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Storage Used</p>
+                  <p className="font-semibold text-foreground">{systemInfo.storageUsed}</p>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Uptime</p>
+                  <p className="font-semibold text-success">{systemInfo.uptime}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Advanced Settings */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5 text-warning" />
-            Advanced Settings
-            <Badge variant="outline" className="text-warning border-warning">
-              Admin Only
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg border border-warning/20 bg-warning/5">
-              <div>
-                <h4 className="font-medium text-foreground">Maintenance Mode</h4>
-                <p className="text-sm text-muted-foreground">Enable to perform system updates</p>
-              </div>
-              <Switch />
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div>
-                <h4 className="font-medium text-foreground">Debug Logging</h4>
-                <p className="text-sm text-muted-foreground">Enable detailed system logs</p>
-              </div>
-              <Switch />
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-lg border">
-              <div>
-                <h4 className="font-medium text-foreground">API Access</h4>
-                <p className="text-sm text-muted-foreground">Allow external API connections</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Keys
-                </Button>
-                <Switch />
-              </div>
-            </div>
+          {/* Settings Categories */}
+          <div className="grid gap-6">
+            {settingsCategories.map((category) => {
+              const Icon = category.icon;
+              return (
+                <Card key={category.id} className="shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                      {category.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {category.settings.map((setting, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-foreground">{setting.name}</h4>
+                            <p className="text-sm text-muted-foreground">{setting.description}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {setting.type === "toggle" && (
+                              <Switch 
+                                checked={settings[`${category.id}_${setting.name}`] ?? setting.value as boolean}
+                                onCheckedChange={(value) => handleSettingChange(category.id, setting.name, value)}
+                              />
+                            )}
+                            {setting.type === "text" && (
+                              <Input
+                                value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
+                                className="w-48"
+                                onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
+                              />
+                            )}
+                            {setting.type === "number" && (
+                              <Input
+                                type="number"
+                                value={settings[`${category.id}_${setting.name}`] ?? setting.value as string}
+                                className="w-24"
+                                onChange={(e) => handleSettingChange(category.id, setting.name, e.target.value)}
+                              />
+                            )}
+                            {setting.type === "select" && (
+                              <Badge variant="outline" className="min-w-20 justify-center">
+                                {settings[`${category.id}_${setting.name}`] ?? setting.value as string}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Data Management */}
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                Data Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Export')}>
+                  <Download className="h-6 w-6" />
+                  Export Data
+                </Button>
+                <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Import')}>
+                  <Upload className="h-6 w-6" />
+                  Import Data
+                </Button>
+                <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleDataAction('Backup')}>
+                  <RefreshCw className="h-6 w-6" />
+                  Create Backup
+                </Button>
+                <Button variant="outline" className="h-20 flex-col gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleDataAction('Clear Cache')}>
+                  <Trash2 className="h-6 w-6" />
+                  Clear Cache
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Settings */}
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-warning" />
+                Advanced Settings
+                <Badge variant="outline" className="text-warning border-warning">
+                  Admin Only
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-warning/20 bg-warning/5">
+                  <div>
+                    <h4 className="font-medium text-foreground">Maintenance Mode</h4>
+                    <p className="text-sm text-muted-foreground">Enable to perform system updates</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <h4 className="font-medium text-foreground">Debug Logging</h4>
+                    <p className="text-sm text-muted-foreground">Enable detailed system logs</p>
+                  </div>
+                  <Switch />
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <h4 className="font-medium text-foreground">API Access</h4>
+                    <p className="text-sm text-muted-foreground">Allow external API connections</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Keys
+                    </Button>
+                    <Switch />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {activeTab === 'role-requests' && isAdmin && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5 text-primary" />
+              Role Change Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AdminRoleRequestsManager />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

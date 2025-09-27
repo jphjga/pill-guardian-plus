@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { User, Building2, Mail, UserCircle } from 'lucide-react';
-import RoleChangeDialog from '@/components/RoleChangeDialog';
+import RoleChangeRequestDialog from '@/components/RoleChangeRequestDialog';
 
 interface Profile {
   full_name: string;
@@ -167,31 +167,26 @@ const Profile = () => {
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <div className="flex items-center gap-2">
-                  <Select value={profile.role} disabled>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pharmacist">Pharmacist</SelectItem>
-                      <SelectItem value="pharmacy_tech">Pharmacy Technician</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="administrator">Administrator</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex-1 p-2 bg-muted rounded-md text-sm">
+                    {profile.role === 'pharmacist' && 'Pharmacist'}
+                    {profile.role === 'pharmacy_tech' && 'Pharmacy Technician'}
+                    {profile.role === 'manager' && 'Manager'}
+                    {profile.role === 'administrator' && 'Administrator'}
+                    {!['pharmacist', 'pharmacy_tech', 'manager', 'administrator'].includes(profile.role) && profile.role}
+                  </div>
                   {profile.role !== 'administrator' && (
-                    <RoleChangeDialog
-                      currentRole={profile.role}
+                    <RoleChangeRequestDialog 
+                      currentRole={profile.role} 
                       organization={profile.organization}
-                      userName={profile.full_name}
-                      userEmail={profile.email}
+                      userProfile={profile}
                     />
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {profile.role === 'administrator' 
-                    ? 'As an administrator, you cannot change your own role.' 
-                    : 'To change your role, submit a request for administrator approval.'}
-                </p>
+                {profile.role !== 'administrator' && (
+                  <p className="text-xs text-muted-foreground">
+                    Role changes require administrator approval
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-4 pt-4">
