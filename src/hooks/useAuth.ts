@@ -80,6 +80,12 @@ export const useAuthProvider = () => {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+    if (!error) {
+      // Clear local state and redirect
+      setSession(null);
+      setUser(null);
+      window.location.href = '/auth';
+    }
     return { error };
   };
 

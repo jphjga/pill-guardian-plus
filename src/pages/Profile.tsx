@@ -77,7 +77,7 @@ const Profile = () => {
           full_name: profile.full_name,
           email: profile.email,
           organization: profile.organization,
-          role: profile.role,
+          // Don't update role here - it's managed through role change requests
         });
 
       if (error) throw error;
