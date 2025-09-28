@@ -36,6 +36,38 @@ const Profile = () => {
     }
   }, [user]);
 
+  // Set up real-time subscription to profile updates
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new) {
+            setProfile({
+              full_name: payload.new.full_name || '',
+              email: payload.new.email || user?.email || '',
+              organization: payload.new.organization || '',
+              role: payload.new.role || 'pharmacist',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, user?.email]);
+
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -72,13 +104,13 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user?.id,
+        .update({
           full_name: profile.full_name,
           email: profile.email,
           organization: profile.organization,
           // Don't update role here - it's managed through role change requests
-        });
+        })
+        .eq('user_id', user?.id);
 
       if (error) throw error;
 
