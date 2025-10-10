@@ -107,8 +107,7 @@ const Profile = () => {
         .update({
           full_name: profile.full_name,
           email: profile.email,
-          organization: profile.organization,
-          // Don't update role here - it's managed through role change requests
+          // Don't update organization or role - they're managed separately
         })
         .eq('user_id', user?.id);
 
@@ -187,13 +186,14 @@ const Profile = () => {
                   <Input
                     id="organization"
                     type="text"
-                    placeholder="Enter your organization name"
-                    className="pl-10"
+                    className="pl-10 bg-muted"
                     value={profile.organization}
-                    onChange={(e) => setProfile({ ...profile, organization: e.target.value })}
-                    required
+                    disabled
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Organization cannot be changed. Contact your administrator if needed.
+                </p>
               </div>
 
               <div className="space-y-2">

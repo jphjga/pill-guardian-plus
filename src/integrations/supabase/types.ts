@@ -22,6 +22,7 @@ export type Database = {
           medication_id: string | null
           message: string
           order_id: string | null
+          organization: string | null
           severity: string | null
           title: string
           type: string
@@ -34,6 +35,7 @@ export type Database = {
           medication_id?: string | null
           message: string
           order_id?: string | null
+          organization?: string | null
           severity?: string | null
           title: string
           type: string
@@ -46,6 +48,7 @@ export type Database = {
           medication_id?: string | null
           message?: string
           order_id?: string | null
+          organization?: string | null
           severity?: string | null
           title?: string
           type?: string
@@ -81,6 +84,7 @@ export type Database = {
           insurance_provider: string | null
           last_name: string
           medical_conditions: string[] | null
+          organization: string | null
           phone: string | null
           updated_at: string
         }
@@ -96,6 +100,7 @@ export type Database = {
           insurance_provider?: string | null
           last_name: string
           medical_conditions?: string[] | null
+          organization?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -111,6 +116,7 @@ export type Database = {
           insurance_provider?: string | null
           last_name?: string
           medical_conditions?: string[] | null
+          organization?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -126,6 +132,7 @@ export type Database = {
           maximum_stock: number
           medication_id: string
           minimum_stock: number
+          organization: string | null
           supplier: string | null
           updated_at: string
         }
@@ -138,6 +145,7 @@ export type Database = {
           maximum_stock?: number
           medication_id: string
           minimum_stock?: number
+          organization?: string | null
           supplier?: string | null
           updated_at?: string
         }
@@ -150,6 +158,7 @@ export type Database = {
           maximum_stock?: number
           medication_id?: string
           minimum_stock?: number
+          organization?: string | null
           supplier?: string | null
           updated_at?: string
         }
@@ -179,6 +188,7 @@ export type Database = {
           manufacturer: string | null
           name: string
           ndc_number: string | null
+          organization: string | null
           price: number | null
           updated_at: string
         }
@@ -197,6 +207,7 @@ export type Database = {
           manufacturer?: string | null
           name: string
           ndc_number?: string | null
+          organization?: string | null
           price?: number | null
           updated_at?: string
         }
@@ -215,6 +226,7 @@ export type Database = {
           manufacturer?: string | null
           name?: string
           ndc_number?: string | null
+          organization?: string | null
           price?: number | null
           updated_at?: string
         }
@@ -277,6 +289,7 @@ export type Database = {
           id: string
           insurance_coverage: number | null
           notes: string | null
+          organization: string | null
           prescription_number: string | null
           status: string | null
           total_amount: number | null
@@ -290,6 +303,7 @@ export type Database = {
           id?: string
           insurance_coverage?: number | null
           notes?: string | null
+          organization?: string | null
           prescription_number?: string | null
           status?: string | null
           total_amount?: number | null
@@ -303,6 +317,7 @@ export type Database = {
           id?: string
           insurance_coverage?: number | null
           notes?: string | null
+          organization?: string | null
           prescription_number?: string | null
           status?: string | null
           total_amount?: number | null
@@ -405,18 +420,57 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          organization: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_user_organization: {
+        Args: { _user_id: string }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _organization: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin_in_organization: {
         Args: { target_org: string }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "administrator" | "manager" | "pharmacist" | "technician"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -543,6 +597,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["administrator", "manager", "pharmacist", "technician"],
+    },
   },
 } as const

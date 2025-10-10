@@ -58,7 +58,7 @@ const Auth = () => {
         .neq('organization', '');
       
       if (data) {
-        const orgs = [...new Set(data.map(item => item.organization).filter(Boolean))];
+        const orgs = [...new Set(data.map(item => item.organization).filter(Boolean))] as string[];
         setExistingOrganizations(orgs);
       }
     };
