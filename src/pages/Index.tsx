@@ -10,6 +10,8 @@ import CustomerManagement from "@/components/CustomerManagement";
 import SystemSettings from "@/components/SystemSettings";
 import OrdersManager from "@/components/OrdersManager";
 import AdminRoleRequests from "@/components/AdminRoleRequests";
+import NotificationsManager from "@/components/NotificationsManager";
+import CheckoutManager from "@/components/CheckoutManager";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -41,10 +43,14 @@ const Index = () => {
     switch (currentPage) {
       case "dashboard":
         return <Dashboard onPageChange={setCurrentPage} />;
+      case "checkout":
+        return <CheckoutManager />;
       case "inventory":
         return <InventoryList />;
       case "medications":
         return <MedicationDatabase />;
+      case "notifications":
+        return <NotificationsManager />;
       case "alerts":
         return <AlertsManager />;
       case "customers":

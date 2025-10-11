@@ -78,19 +78,36 @@ const AdminRoleRequestsManager = () => {
 
       if (updateError) throw updateError;
 
-      // If approved, update the user's role in profiles table
-      if (action === 'approved') {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ role: request.to_role })
-          .eq('user_id', request.user_id);
+      // Create notification for the user
+      const notificationTitle = action === 'approved' 
+        ? 'Role Change Approved' 
+        : 'Role Change Rejected';
+      
+      const notificationMessage = action === 'approved'
+        ? `Your role change request to ${getRoleLabel(request.to_role)} has been approved. Please accept the role change in your notifications.`
+        : `Your role change request to ${getRoleLabel(request.to_role)} has been rejected.${response ? ` Admin response: ${response}` : ''}`;
 
-        if (profileError) throw profileError;
-      }
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: request.user_id,
+          organization: request.organization,
+          type: 'role_change_response',
+          title: notificationTitle,
+          message: notificationMessage,
+          data: {
+            role_change_request_id: requestId,
+            new_role: request.to_role,
+            action: action,
+            admin_response: response
+          }
+        });
+
+      if (notificationError) throw notificationError;
 
       toast({
         title: `Request ${action}`,
-        description: `Role change request has been ${action}.`,
+        description: `Role change request has been ${action} and user has been notified.`,
       });
 
       setSelectedRequest(null);

@@ -1,4 +1,4 @@
-import { Pill, Package, AlertTriangle, TrendingUp, Users, Settings, Bell, User, UserCog } from "lucide-react";
+import { Pill, Package, AlertTriangle, TrendingUp, Users, Settings, Bell, User, UserCog, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -32,11 +33,50 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
 
     fetchUserRole();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchUnreadCount = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnreadCount();
+
+    // Subscribe to notification changes
+    const channel = supabase
+      .channel('notification-count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
   
   const navigationItems = [
     { id: "dashboard", label: "Dashboard", icon: TrendingUp },
+    { id: "checkout", label: "Checkout", icon: ShoppingCart },
     { id: "inventory", label: "Inventory", icon: Package },
     { id: "medications", label: "Medications", icon: Pill },
+    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "alerts", label: "Alerts", icon: AlertTriangle },
     { id: "customers", label: "Customers", icon: Users },
     ...(userRole === 'administrator' ? [{ id: "role-requests", label: "Role Requests", icon: UserCog }] : []),
@@ -59,7 +99,17 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Bell className="h-6 w-6 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => onPageChange('notifications')}
+            >
+              <Bell className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
             <div 
               className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors"
               onClick={() => navigate('/profile')}

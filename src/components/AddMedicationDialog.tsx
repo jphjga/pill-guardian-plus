@@ -31,6 +31,7 @@ interface MedicationForm {
   maximum_stock: string;
   supplier: string;
   location: string;
+  barcode: string;
 }
 
 const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDialogProps) => {
@@ -52,7 +53,8 @@ const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDia
     minimum_stock: '20',
     maximum_stock: '1000',
     supplier: '',
-    location: ''
+    location: '',
+    barcode: ''
   });
 
   const resetForm = () => {
@@ -72,7 +74,8 @@ const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDia
       minimum_stock: '20',
       maximum_stock: '1000',
       supplier: '',
-      location: ''
+      location: '',
+      barcode: ''
     });
   };
 
@@ -95,7 +98,8 @@ const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDia
           price: formData.price ? parseFloat(formData.price) : null,
           cost: formData.cost ? parseFloat(formData.cost) : null,
           description: formData.description || null,
-          expiry_date: formData.expiry_date || null
+          expiry_date: formData.expiry_date || null,
+          barcode: formData.barcode || null
         })
         .select()
         .single();
@@ -182,6 +186,18 @@ const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDia
               />
             </div>
             <div>
+              <Label htmlFor="barcode">Barcode</Label>
+              <Input
+                id="barcode"
+                value={formData.barcode}
+                onChange={(e) => handleInputChange('barcode', e.target.value)}
+                placeholder="Enter barcode"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="category">Category *</Label>
               <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger>
@@ -197,6 +213,7 @@ const AddMedicationDialog = ({ open, onOpenChange, onSuccess }: AddMedicationDia
                 </SelectContent>
               </Select>
             </div>
+            <div></div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
