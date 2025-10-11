@@ -107,7 +107,8 @@ const Profile = () => {
         .update({
           full_name: profile.full_name,
           email: profile.email,
-          // Don't update organization or role - they're managed separately
+          // Don't update organization - it's fixed per user
+          // Don't update role - it's managed through role change requests
         })
         .eq('user_id', user?.id);
 
@@ -186,13 +187,15 @@ const Profile = () => {
                   <Input
                     id="organization"
                     type="text"
+                    placeholder="Enter your organization name"
                     className="pl-10 bg-muted"
                     value={profile.organization}
                     disabled
+                    readOnly
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Organization cannot be changed. Contact your administrator if needed.
+                  Organization cannot be changed. Contact your administrator if this needs updating.
                 </p>
               </div>
 
@@ -201,10 +204,10 @@ const Profile = () => {
                 <div className="flex items-center gap-2">
                   <div className="flex-1 p-2 bg-muted rounded-md text-sm">
                     {profile.role === 'pharmacist' && 'Pharmacist'}
-                    {profile.role === 'pharmacy_tech' && 'Pharmacy Technician'}
+                    {profile.role === 'technician' && 'Pharmacy Technician'}
                     {profile.role === 'manager' && 'Manager'}
                     {profile.role === 'administrator' && 'Administrator'}
-                    {!['pharmacist', 'pharmacy_tech', 'manager', 'administrator'].includes(profile.role) && profile.role}
+                    {!['pharmacist', 'technician', 'manager', 'administrator'].includes(profile.role) && profile.role}
                   </div>
                   {profile.role !== 'administrator' && (
                     <RoleChangeRequestDialog 

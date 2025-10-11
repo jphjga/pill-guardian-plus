@@ -51,14 +51,18 @@ const Auth = () => {
 
   useEffect(() => {
     const fetchOrganizations = async () => {
-      const { data } = await supabase
+      // Fetch distinct organizations from profiles
+      const { data, error } = await supabase
         .from('profiles')
-        .select('organization')
-        .not('organization', 'is', null)
-        .neq('organization', '');
+        .select('organization');
       
-      if (data) {
-        const orgs = [...new Set(data.map(item => item.organization).filter(Boolean))] as string[];
+      if (!error && data) {
+        // Get unique non-empty organizations
+        const orgs = [...new Set(
+          data
+            .map(item => item.organization)
+            .filter(org => org && org.trim() !== '')
+        )];
         setExistingOrganizations(orgs);
       }
     };
