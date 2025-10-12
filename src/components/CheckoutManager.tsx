@@ -169,7 +169,7 @@ const CheckoutManager = () => {
         .from('sales')
         .insert({
           organization: profile.organization,
-          customer_id: selectedCustomer || null,
+          customer_id: selectedCustomer && selectedCustomer !== 'walk-in' ? selectedCustomer : null,
           total_amount: calculateTotal(),
           payment_method: paymentMethod,
           notes: notes.trim() || null,
@@ -410,7 +410,7 @@ const CheckoutManager = () => {
                     <SelectValue placeholder="Select customer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Walk-in Customer</SelectItem>
+                    <SelectItem value="walk-in">Walk-in Customer</SelectItem>
                     {customers.map(customer => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.first_name} {customer.last_name}

@@ -48,17 +48,25 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
         .select('*', { count: 'exact', head: true });
 
       // Fetch low stock items with medication details
-      const { data: lowStockData } = await supabase
+      // Fetch inventory and compute low stock client-side (PostgREST can't compare two columns)
+      const { data: invData, error: invError } = await supabase
         .from('inventory')
-        .select(`
-          current_stock,
-          minimum_stock,
-          medications (
-            name
-          )
-        `)
-        .lt('current_stock', 'minimum_stock')
-        .limit(4);
+        .select('medication_id, current_stock, minimum_stock');
+
+      if (invError) throw invError;
+      const low = (invData || []).filter((i: any) => i.current_stock < i.minimum_stock).slice(0, 4);
+
+      // Fetch medication names for these items
+      let lowStockData = low.map((i: any) => ({ ...i, medications: { name: 'Unknown Medication' } }));
+      const ids = low.map((i: any) => i.medication_id).filter(Boolean);
+      if (ids.length) {
+        const { data: meds } = await supabase
+          .from('medications')
+          .select('id, name')
+          .in('id', ids as string[]);
+        const map = new Map((meds || []).map((m: any) => [m.id, m.name]));
+        lowStockData = low.map((i: any) => ({ ...i, medications: { name: map.get(i.medication_id) || 'Unknown Medication' } }));
+      }
 
       // Fetch total customers
       const { count: customerCount } = await supabase
