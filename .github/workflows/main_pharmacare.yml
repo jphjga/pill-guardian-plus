@@ -9,6 +9,12 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
+    # This is the new block that fixes the login error
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - uses: actions/checkout@v3
 
@@ -28,9 +34,9 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7FA10D88FAA84A3A9B416DB9D04305A1 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2F0D25B4F6414775876E1A8C98FA87A0 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_01D33416182F46DDB6004444DD6AE658 }}
-
+          
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'pharmacare'
-          package: './dist'     
+          app-name: 'pharmacare'   # <-- Make sure this is still correct
+          package: './dist'
