@@ -8,8 +8,6 @@ import MedicationDatabase from "@/components/MedicationDatabase";
 import AlertsManager from "@/components/AlertsManager";
 import CustomerManagement from "@/components/CustomerManagement";
 import SystemSettings from "@/components/SystemSettings";
-import OrdersManager from "@/components/OrdersManager";
-import AdminRoleRequests from "@/components/AdminRoleRequests";
 import NotificationsManager from "@/components/NotificationsManager";
 import CheckoutManager from "@/components/CheckoutManager";
 
@@ -55,10 +53,6 @@ const Index = () => {
         return <AlertsManager />;
       case "customers":
         return <CustomerManagement />;
-      case "orders":
-        return <OrdersManager />;
-      case "role-requests":
-        return <AdminRoleRequests />;
       case "settings":
         return <SystemSettings />;
       default:

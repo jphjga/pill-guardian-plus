@@ -28,7 +28,7 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
     totalMedications: 0,
     lowStockItems: 0,
     totalCustomers: 0,
-    pendingOrders: 0,
+    totalSales: 0,
   });
   const [recentAlerts, setRecentAlerts] = useState<any[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
@@ -65,11 +65,10 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
         .from('customers')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch pending orders
-      const { count: pendingOrdersCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      // Fetch total sales
+      const { count: salesCount } = await supabase
+        .from('sales')
+        .select('*', { count: 'exact', head: true });
 
       // Fetch recent alerts
       const { data: alertsData } = await supabase
@@ -82,7 +81,7 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
         totalMedications: medicationCount || 0,
         lowStockItems: lowStockData?.length || 0,
         totalCustomers: customerCount || 0,
-        pendingOrders: pendingOrdersCount || 0,
+        totalSales: salesCount || 0,
       });
 
       setRecentAlerts(alertsData || []);
@@ -112,15 +111,15 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
       color: "text-warning"
     },
     {
-      title: "Total Customers",
+      title: "Total Patients",
       value: stats.totalCustomers.toString(),
       icon: Users,
       color: "text-secondary"
     },
     {
-      title: "Pending Orders",
-      value: stats.pendingOrders.toString(),
-      icon: ShoppingCart,
+      title: "Total Sales",
+      value: stats.totalSales.toString(),
+      icon: DollarSign,
       color: "text-success"
     }
   ];
@@ -319,18 +318,18 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
             >
               <Users className="h-8 w-8 text-success group-hover:scale-110 transition-transform" />
               <div>
-                <p className="font-medium text-foreground">Manage Customers</p>
-                <p className="text-sm text-muted-foreground">Customer database</p>
+                <p className="font-medium text-foreground">Manage Patients</p>
+                <p className="text-sm text-muted-foreground">Patient database</p>
               </div>
             </div>
             <div 
-              onClick={() => onPageChange('orders')}
+              onClick={() => onPageChange('checkout')}
               className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 cursor-pointer transition-colors group"
             >
-              <CheckCircle className="h-8 w-8 text-medical-green group-hover:scale-110 transition-transform" />
+              <ShoppingCart className="h-8 w-8 text-medical-green group-hover:scale-110 transition-transform" />
               <div>
-                <p className="font-medium text-foreground">Process Orders</p>
-                <p className="text-sm text-muted-foreground">Fulfill orders</p>
+                <p className="font-medium text-foreground">Process Sale</p>
+                <p className="text-sm text-muted-foreground">New checkout</p>
               </div>
             </div>
           </div>

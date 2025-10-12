@@ -78,8 +78,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
     { id: "medications", label: "Medications", icon: Pill },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "alerts", label: "Alerts", icon: AlertTriangle },
-    { id: "customers", label: "Customers", icon: Users },
-    ...(userRole === 'administrator' ? [{ id: "role-requests", label: "Role Requests", icon: UserCog }] : []),
+    { id: "customers", label: "Patients", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 

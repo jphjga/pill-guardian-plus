@@ -24,6 +24,7 @@ import {
   Mail,
   UserCog
 } from "lucide-react";
+import DataExportManager from './DataExportManager';
 
 const SystemSettings = () => {
   const { user } = useAuth();
@@ -259,15 +260,13 @@ const SystemSettings = () => {
           <Settings className="h-4 w-4 mr-2" />
           System
         </Button>
-        {isAdmin && (
-          <Button
-            variant={activeTab === 'role-requests' ? 'default' : 'ghost'}
-            onClick={() => setActiveTab('role-requests')}
-          >
-            <UserCog className="h-4 w-4 mr-2" />
-            Role Requests
-          </Button>
-        )}
+        <Button
+          variant={activeTab === 'data-export' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('data-export')}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Data Export
+        </Button>
       </div>
 
       {activeTab === 'system' && (
@@ -439,18 +438,8 @@ const SystemSettings = () => {
         </>
       )}
 
-      {activeTab === 'role-requests' && isAdmin && (
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCog className="h-5 w-5 text-primary" />
-              Role Change Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AdminRoleRequestsManager />
-          </CardContent>
-        </Card>
+      {activeTab === 'data-export' && (
+        <DataExportManager />
       )}
     </div>
   );

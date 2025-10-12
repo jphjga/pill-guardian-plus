@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Check, MessageSquare, Radio, Send, CheckCheck } from 'lucide-react';
+import { Bell, Check, MessageSquare, Radio, Send, CheckCheck, UserCog } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import AdminRoleRequestsManager from './AdminRoleRequestsManager';
 
 interface Notification {
   id: string;
@@ -317,7 +318,12 @@ const NotificationsManager = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Admin Role Requests Section */}
+      {userRole === 'administrator' && (
+        <AdminRoleRequestsManager />
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
