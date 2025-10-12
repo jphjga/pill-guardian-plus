@@ -21,7 +21,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v2
         with:
-          node-version: '18.x'
+          node-version: '22.x'
 
       - name: npm install and build
         run: |
@@ -40,3 +40,4 @@ jobs:
         with:
           app-name: 'pharmacare'   # <-- Make sure this is still correct
           package: './dist'
+
