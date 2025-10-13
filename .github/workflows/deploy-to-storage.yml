@@ -10,10 +10,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
@@ -23,8 +23,9 @@ jobs:
           npm run build --if-present
 
       - name: 'Deploy to Azure Storage'
-        uses: azure/storage-blob-upload@v1
+        # This is the new, corrected action
+        uses: Azure/Upload-Azure-Storage-Blob@v1
         with:
           connection-string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-          source-path: ./dist
-          destination-container: '$web'
+          container-name: '$web'
+          path-to-upload: './dist'
