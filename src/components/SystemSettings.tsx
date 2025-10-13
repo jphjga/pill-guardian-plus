@@ -24,7 +24,7 @@ import {
   Mail,
   UserCog
 } from "lucide-react";
-import DataExportManager from './DataExportManager';
+import DataManagementManager from './DataManagementManager';
 
 const SystemSettings = () => {
   const { user } = useAuth();
@@ -261,11 +261,11 @@ const SystemSettings = () => {
           System
         </Button>
         <Button
-          variant={activeTab === 'data-export' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('data-export')}
+          variant={activeTab === 'data-management' ? 'default' : 'ghost'}
+          onClick={() => setActiveTab('data-management')}
         >
-          <Download className="h-4 w-4 mr-2" />
-          Data Export
+          <Database className="h-4 w-4 mr-2" />
+          Data Management
         </Button>
       </div>
 
@@ -438,8 +438,8 @@ const SystemSettings = () => {
         </>
       )}
 
-      {activeTab === 'data-export' && (
-        <DataExportManager />
+      {activeTab === 'data-management' && (
+        <DataManagementManager />
       )}
     </div>
   );

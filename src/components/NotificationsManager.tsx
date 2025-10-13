@@ -9,7 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Check, MessageSquare, Radio, Send, CheckCheck, UserCog } from 'lucide-react';
+import { Bell, Check, MessageSquare, Radio, Send, CheckCheck, UserCog, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AdminRoleRequestsManager from './AdminRoleRequestsManager';
@@ -52,6 +54,8 @@ const NotificationsManager = () => {
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastType, setBroadcastType] = useState<'all' | 'custom'>('all');
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -266,8 +270,21 @@ const NotificationsManager = () => {
       return;
     }
 
+    if (broadcastType === 'custom' && selectedStaff.length === 0) {
+      toast({
+        title: 'No recipients selected',
+        description: 'Please select at least one staff member',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      const notificationsToInsert = profiles.map(profile => ({
+      const recipientList = broadcastType === 'all' 
+        ? profiles 
+        : profiles.filter(p => selectedStaff.includes(p.user_id));
+
+      const notificationsToInsert = recipientList.map(profile => ({
         user_id: profile.user_id,
         organization: userOrg,
         type: 'broadcast',
@@ -283,12 +300,14 @@ const NotificationsManager = () => {
 
       toast({
         title: 'Broadcast sent',
-        description: `Message sent to ${profiles.length} staff members`,
+        description: `Message sent to ${recipientList.length} staff member${recipientList.length > 1 ? 's' : ''}`,
       });
 
       setBroadcastOpen(false);
       setBroadcastTitle('');
       setBroadcastMessage('');
+      setBroadcastType('all');
+      setSelectedStaff([]);
     } catch (error: any) {
       toast({
         title: 'Error sending broadcast',
@@ -296,6 +315,14 @@ const NotificationsManager = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const toggleStaffSelection = (userId: string) => {
+    setSelectedStaff(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
   };
 
   const getNotificationIcon = (type: string) => {
@@ -401,14 +428,54 @@ const NotificationsManager = () => {
                     Broadcast
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Broadcast Message</DialogTitle>
                     <DialogDescription>
-                      Send a message to all staff members in your organization ({profiles.length} recipients)
+                      Send a message to staff members in your organization
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Recipients</Label>
+                      <RadioGroup value={broadcastType} onValueChange={(val) => setBroadcastType(val as 'all' | 'custom')}>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="all" id="all-staff" />
+                          <Label htmlFor="all-staff" className="font-normal cursor-pointer">
+                            All staff members ({profiles.length} recipients)
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="custom" id="custom-staff" />
+                          <Label htmlFor="custom-staff" className="font-normal cursor-pointer">
+                            Select specific staff members
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {broadcastType === 'custom' && (
+                      <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                        <Label className="text-sm text-muted-foreground">Select Recipients:</Label>
+                        {profiles.map(profile => (
+                          <div key={profile.user_id} className="flex items-center space-x-2 py-1">
+                            <Checkbox
+                              id={profile.user_id}
+                              checked={selectedStaff.includes(profile.user_id)}
+                              onCheckedChange={() => toggleStaffSelection(profile.user_id)}
+                            />
+                            <Label
+                              htmlFor={profile.user_id}
+                              className="text-sm font-normal cursor-pointer flex-1"
+                            >
+                              {profile.full_name || profile.email} 
+                              <span className="text-muted-foreground ml-2">({profile.role})</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label>Title</Label>
                       <Input
