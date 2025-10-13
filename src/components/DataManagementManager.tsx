@@ -237,9 +237,9 @@ const DataManagementManager = () => {
         throw new Error('Organization not found');
       }
 
-      // Add organization to all records and remove any id fields
+      // Add organization to all records and remove system fields
       const dataToInsert = editedData.map(item => {
-        const { id, ...rest } = item;
+        const { id, created_at, updated_at, medications, ...rest } = item;
         return {
           ...rest,
           organization: profile.organization,
@@ -261,9 +261,10 @@ const DataManagementManager = () => {
       setEditedData([]);
       setImportType(null);
     } catch (error: any) {
+      console.error('Import error:', error);
       toast({
         title: 'Import error',
-        description: error.message,
+        description: error.message || 'Failed to import data',
         variant: 'destructive',
       });
     } finally {

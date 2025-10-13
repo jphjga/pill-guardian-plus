@@ -388,11 +388,15 @@ const NotificationsManager = () => {
                           <SelectValue placeholder="Select staff member" />
                         </SelectTrigger>
                         <SelectContent>
-                          {profiles.map(profile => (
-                            <SelectItem key={profile.user_id} value={profile.user_id}>
-                              {profile.full_name} ({profile.email})
-                            </SelectItem>
-                          ))}
+                          {profiles.length === 0 ? (
+                            <SelectItem value="none" disabled>No staff members found</SelectItem>
+                          ) : (
+                            profiles.map(profile => (
+                              <SelectItem key={profile.user_id} value={profile.user_id}>
+                                {profile.full_name || profile.email} - {profile.role}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
