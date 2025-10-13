@@ -22,7 +22,7 @@ jobs:
       - name: 'Set up Node.js version'
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x' # Using a stable Long-Term Support (LTS) version
+          node-version: '20.x'
 
       # Step 3: Install dependencies and build the project. This creates the 'dist' folder.
       - name: 'npm install and build'
@@ -44,4 +44,5 @@ jobs:
         with:
           app-name: 'jpjga-pharmacare'
           slot-name: 'Production'
-          package: ./dist # <-- THIS IS THE CRITICAL INSTRUCTION!
+          package: ./dist 
+          clean: true # <-- THE FINAL FIX IS HERE
