@@ -21,7 +21,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'
+          node-version: '22.x' # Using LTS for stability
 
       - name: npm install, build, and test
         run: |
@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./build # <-- THIS IS THE ONLY CHANGE NEEDED. This is the fix.
+          path: ./build # <-- THE FIX IS HERE! Changed from 'dist' to 'build'.
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,5 +61,4 @@ jobs:
         with:
           app-name: 'jpjga-pharmacare'
           slot-name: 'Production'
-          package: . # This is correct because the artifact downloaded now IS the 'dist' content.
-
+          package: .
