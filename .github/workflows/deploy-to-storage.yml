@@ -1,0 +1,30 @@
+name: Deploy Website to Azure Storage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
+      - name: npm install and build
+        run: |
+          npm install
+          npm run build --if-present
+
+      - name: 'Deploy to Azure Storage'
+        uses: azure/storage-blob-upload@v1
+        with:
+          connection-string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          source-path: ./dist
+          destination-container: '$web'
