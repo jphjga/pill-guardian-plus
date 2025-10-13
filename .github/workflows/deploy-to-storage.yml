@@ -23,7 +23,7 @@ jobs:
           npm run build --if-present
 
       - name: 'Deploy to Azure Storage'
-        # This is the new, corrected action
+        # This is the corrected action name
         uses: Azure/Upload-Azure-Storage-Blob@v1
         with:
           connection-string: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
