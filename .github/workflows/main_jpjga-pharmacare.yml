@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./dist # <-- THIS IS THE ONLY CHANGE NEEDED. This is the fix.
+          path: ./build # <-- THIS IS THE ONLY CHANGE NEEDED. This is the fix.
 
   deploy:
     runs-on: ubuntu-latest
@@ -62,3 +62,4 @@ jobs:
           app-name: 'jpjga-pharmacare'
           slot-name: 'Production'
           package: . # This is correct because the artifact downloaded now IS the 'dist' content.
+
