@@ -243,6 +243,7 @@ export type Database = {
           is_read: boolean
           message: string
           organization: string
+          sender_id: string | null
           title: string
           type: string
           updated_at: string
@@ -255,6 +256,7 @@ export type Database = {
           is_read?: boolean
           message: string
           organization: string
+          sender_id?: string | null
           title: string
           type: string
           updated_at?: string
@@ -267,6 +269,7 @@ export type Database = {
           is_read?: boolean
           message?: string
           organization?: string
+          sender_id?: string | null
           title?: string
           type?: string
           updated_at?: string

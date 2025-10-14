@@ -20,11 +20,8 @@ import {
   Save,
   RefreshCw,
   Lock,
-  Eye,
-  Mail,
-  UserCog
+  Eye
 } from "lucide-react";
-import DataManagementManager from './DataManagementManager';
 
 const SystemSettings = () => {
   const { user } = useAuth();
@@ -251,26 +248,8 @@ const SystemSettings = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-2 border-b">
-        <Button
-          variant={activeTab === 'system' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('system')}
-        >
-          <Settings className="h-4 w-4 mr-2" />
-          System
-        </Button>
-        <Button
-          variant={activeTab === 'data-management' ? 'default' : 'ghost'}
-          onClick={() => setActiveTab('data-management')}
-        >
-          <Database className="h-4 w-4 mr-2" />
-          Data Management
-        </Button>
-      </div>
-
-      {activeTab === 'system' && (
-        <>
+      {/* Content */}
+      <>
           {/* System Info */}
           <Card className="shadow-card">
             <CardHeader>
@@ -436,11 +415,6 @@ const SystemSettings = () => {
             </CardContent>
           </Card>
         </>
-      )}
-
-      {activeTab === 'data-management' && (
-        <DataManagementManager />
-      )}
     </div>
   );
 };

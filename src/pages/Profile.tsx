@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { User, Building2, Mail, UserCircle } from 'lucide-react';
+import { User, Building2, Mail, UserCircle, ArrowLeft } from 'lucide-react';
 import RoleChangeRequestDialog from '@/components/RoleChangeRequestDialog';
 
 interface Profile {
@@ -19,6 +20,7 @@ interface Profile {
 
 const Profile = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [profile, setProfile] = useState<Profile>({
@@ -136,6 +138,14 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle p-4">
       <div className="max-w-2xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

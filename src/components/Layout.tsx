@@ -87,15 +87,18 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
       {/* Header */}
       <header className="border-b bg-card shadow-card">
         <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center space-x-3">
+          <button 
+            onClick={() => onPageChange('dashboard')}
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary">
               <Pill className="h-6 w-6 text-primary-foreground" />
             </div>
-            <div>
+            <div className="text-left">
               <h1 className="text-xl font-bold text-foreground">PharmaCare</h1>
               <p className="text-sm text-muted-foreground">Inventory Management System</p>
             </div>
-          </div>
+          </button>
           
           <div className="flex items-center space-x-4">
             <div 

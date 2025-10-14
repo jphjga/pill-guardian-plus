@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Bell, Check, MessageSquare, Radio, Send, CheckCheck, UserCog, Users } from 'lucide-react';
+import { Bell, Check, MessageSquare, Radio, Send, CheckCheck, UserCog } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -26,6 +26,7 @@ interface Notification {
   data: any;
   is_read: boolean;
   created_at: string;
+  sender_id?: string;
 }
 
 interface Profile {
@@ -208,7 +209,6 @@ const NotificationsManager = () => {
         description: `Your role has been changed to ${newRole}`,
       });
 
-      // Refresh the page to update the UI with new role
       setTimeout(() => window.location.reload(), 1000);
     } catch (error: any) {
       toast({
@@ -234,6 +234,7 @@ const NotificationsManager = () => {
         .from('notifications')
         .insert({
           user_id: selectedUser,
+          sender_id: user?.id,
           organization: userOrg,
           type: 'direct_message',
           title: dmTitle,
@@ -286,6 +287,7 @@ const NotificationsManager = () => {
 
       const notificationsToInsert = recipientList.map(profile => ({
         user_id: profile.user_id,
+        sender_id: user?.id,
         organization: userOrg,
         type: 'broadcast',
         title: broadcastTitle,
@@ -338,6 +340,18 @@ const NotificationsManager = () => {
     }
   };
 
+  // Group direct messages by conversation
+  const groupedDirectMessages = notifications
+    .filter(n => n.type === 'direct_message')
+    .reduce((groups: { [key: string]: Notification[] }, notification) => {
+      const partnerId = notification.sender_id === user?.id ? notification.user_id : notification.sender_id || 'unknown';
+      if (!groups[partnerId]) {
+        groups[partnerId] = [];
+      }
+      groups[partnerId].push(notification);
+      return groups;
+    }, {});
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   if (loading) {
@@ -346,11 +360,6 @@ const NotificationsManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Admin Role Requests Section */}
-      {userRole === 'administrator' && (
-        <AdminRoleRequestsManager />
-      )}
-
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
@@ -513,7 +522,9 @@ const NotificationsManager = () => {
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
-          <TabsTrigger value="role_changes">Role Changes</TabsTrigger>
+          <TabsTrigger value="role_changes">
+            {userRole === 'administrator' ? 'Role Change Requests' : 'Role Changes'}
+          </TabsTrigger>
           <TabsTrigger value="messages">Messages</TabsTrigger>
         </TabsList>
 
@@ -571,64 +582,30 @@ const NotificationsManager = () => {
         </TabsContent>
 
         <TabsContent value="unread" className="space-y-3">
-          {notifications.filter(n => !n.is_read).map(notification => (
-            <Card key={notification.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getNotificationIcon(notification.type)}
-                    <CardTitle className="text-base">{notification.title}</CardTitle>
-                  </div>
-                  <Badge variant="default">New</Badge>
-                </div>
-                <CardDescription>
-                  {new Date(notification.created_at).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-3">{notification.message}</p>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    Mark as read
-                  </Button>
-                  {notification.type === 'role_change_response' && 
-                   notification.data?.action === 'approved' && (
-                    <Button 
-                      size="sm"
-                      onClick={() => acceptRoleChange(notification)}
-                    >
-                      Accept Role Change
-                    </Button>
-                  )}
-                </div>
+          {notifications.filter(n => !n.is_read).length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">No unread notifications</p>
               </CardContent>
             </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="role_changes" className="space-y-3">
-          {notifications.filter(n => n.type === 'role_change_response').map(notification => (
-            <Card key={notification.id} className={notification.is_read ? 'opacity-60' : ''}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getNotificationIcon(notification.type)}
-                    <CardTitle className="text-base">{notification.title}</CardTitle>
+          ) : (
+            notifications.filter(n => !n.is_read).map(notification => (
+              <Card key={notification.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      {getNotificationIcon(notification.type)}
+                      <CardTitle className="text-base">{notification.title}</CardTitle>
+                    </div>
+                    <Badge variant="default">New</Badge>
                   </div>
-                  {!notification.is_read && <Badge variant="default">New</Badge>}
-                </div>
-                <CardDescription>
-                  {new Date(notification.created_at).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-3">{notification.message}</p>
-                <div className="flex gap-2">
-                  {!notification.is_read && (
+                  <CardDescription>
+                    {new Date(notification.created_at).toLocaleString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm mb-3">{notification.message}</p>
+                  <div className="flex gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -636,50 +613,195 @@ const NotificationsManager = () => {
                     >
                       Mark as read
                     </Button>
-                  )}
-                  {notification.data?.action === 'approved' && !notification.is_read && (
-                    <Button 
-                      size="sm"
-                      onClick={() => acceptRoleChange(notification)}
-                    >
-                      Accept Role Change
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    {notification.type === 'role_change_response' && 
+                     notification.data?.action === 'approved' && (
+                      <Button 
+                        size="sm"
+                        onClick={() => acceptRoleChange(notification)}
+                      >
+                        Accept Role Change
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
 
-        <TabsContent value="messages" className="space-y-3">
-          {notifications.filter(n => n.type === 'direct_message' || n.type === 'broadcast').map(notification => (
-            <Card key={notification.id} className={notification.is_read ? 'opacity-60' : ''}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    {getNotificationIcon(notification.type)}
-                    <CardTitle className="text-base">{notification.title}</CardTitle>
-                  </div>
-                  {!notification.is_read && <Badge variant="default">New</Badge>}
-                </div>
-                <CardDescription>
-                  {new Date(notification.created_at).toLocaleString()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm mb-3">{notification.message}</p>
-                {!notification.is_read && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    Mark as read
-                  </Button>
-                )}
+        <TabsContent value="role_changes" className="space-y-3">
+          {userRole === 'administrator' ? (
+            <AdminRoleRequestsManager />
+          ) : (
+            <>
+              {notifications.filter(n => n.type === 'role_change_response').length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-center text-muted-foreground">No role change responses</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                notifications.filter(n => n.type === 'role_change_response').map(notification => (
+                  <Card key={notification.id} className={notification.is_read ? 'opacity-60' : ''}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          {getNotificationIcon(notification.type)}
+                          <CardTitle className="text-base">{notification.title}</CardTitle>
+                        </div>
+                        {!notification.is_read && <Badge variant="default">New</Badge>}
+                      </div>
+                      <CardDescription>
+                        {new Date(notification.created_at).toLocaleString()}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm mb-3">{notification.message}</p>
+                      <div className="flex gap-2">
+                        {!notification.is_read && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            Mark as read
+                          </Button>
+                        )}
+                        {notification.data?.action === 'approved' && !notification.is_read && (
+                          <Button 
+                            size="sm"
+                            onClick={() => acceptRoleChange(notification)}
+                          >
+                            Accept Role Change
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="messages" className="space-y-4">
+          {/* Grouped Direct Messages */}
+          {Object.keys(groupedDirectMessages).length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Direct Messages
+              </h3>
+              {Object.entries(groupedDirectMessages).map(([partnerId, messages]) => {
+                const partner = profiles.find(p => p.user_id === partnerId);
+                const unreadInConversation = messages.filter(m => !m.is_read).length;
+                const lastMessage = messages[0];
+                
+                return (
+                  <Card key={partnerId}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            {partner ? (partner.full_name || partner.email) : 'Unknown User'}
+                          </CardTitle>
+                          <CardDescription>
+                            {messages.length} message{messages.length > 1 ? 's' : ''}
+                            {unreadInConversation > 0 && ` • ${unreadInConversation} unread`}
+                          </CardDescription>
+                        </div>
+                        {unreadInConversation > 0 && (
+                          <Badge variant="destructive">{unreadInConversation}</Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {messages.map(msg => (
+                          <div key={msg.id} className={`p-3 rounded-lg ${msg.is_read ? 'bg-muted/50' : 'bg-primary/10'}`}>
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="text-xs font-semibold">
+                                {msg.sender_id === user?.id ? 'You' : (partner?.full_name || partner?.email || 'Unknown')}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(msg.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium mb-1">{msg.title}</p>
+                            <p className="text-sm">{msg.message}</p>
+                            {!msg.is_read && msg.sender_id !== user?.id && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => markAsRead(msg.id)}
+                              >
+                                Mark as read
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Broadcast Messages */}
+          {notifications.filter(n => n.type === 'broadcast').length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Radio className="h-5 w-5" />
+                Broadcast Messages
+              </h3>
+              {notifications.filter(n => n.type === 'broadcast').map(notification => {
+                const sender = notification.sender_id ? profiles.find(p => p.user_id === notification.sender_id) : null;
+                
+                return (
+                  <Card key={notification.id} className={notification.is_read ? 'opacity-60' : ''}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Radio className="h-4 w-4" />
+                          <div>
+                            <CardTitle className="text-base">{notification.title}</CardTitle>
+                            <CardDescription>
+                              From: {sender ? (sender.full_name || sender.email) : 'System'} • {new Date(notification.created_at).toLocaleString()}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        {!notification.is_read && <Badge variant="default">New</Badge>}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm mb-3">{notification.message}</p>
+                      {!notification.is_read && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => markAsRead(notification.id)}
+                        >
+                          Mark as read
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {Object.keys(groupedDirectMessages).length === 0 && 
+           notifications.filter(n => n.type === 'broadcast').length === 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">No messages</p>
               </CardContent>
             </Card>
-          ))}
+          )}
         </TabsContent>
       </Tabs>
     </div>
