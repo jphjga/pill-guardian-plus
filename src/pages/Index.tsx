@@ -7,7 +7,6 @@ import InventoryList from "@/components/InventoryList";
 import MedicationDatabase from "@/components/MedicationDatabase";
 import AlertsManager from "@/components/AlertsManager";
 import CustomerManagement from "@/components/CustomerManagement";
-import SystemSettings from "@/components/SystemSettings";
 import NotificationsManager from "@/components/NotificationsManager";
 import CheckoutManager from "@/components/CheckoutManager";
 
@@ -53,8 +52,6 @@ const Index = () => {
         return <AlertsManager />;
       case "customers":
         return <CustomerManagement />;
-      case "settings":
-        return <SystemSettings />;
       default:
         return <Dashboard onPageChange={setCurrentPage} />;
     }

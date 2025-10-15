@@ -1,4 +1,4 @@
-import { Pill, Package, AlertTriangle, TrendingUp, Users, Settings, Bell, User, UserCog, ShoppingCart } from "lucide-react";
+import { Pill, Package, AlertTriangle, TrendingUp, Users, Bell, User, UserCog, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,7 +79,6 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "alerts", label: "Alerts", icon: AlertTriangle },
     { id: "customers", label: "Patients", icon: Users },
-    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
