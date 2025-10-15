@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Upload, FileText, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface ImportMedicationsDialogProps {
   open: boolean;
@@ -47,10 +48,12 @@ const dbColumns = [
 
 const ImportMedicationsDialog = ({ open, onOpenChange, onSuccess }: ImportMedicationsDialogProps) => {
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'upload' | 'map' | 'preview'>('upload');
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({});
+  const [isDragging, setIsDragging] = useState(false);
 
   const parseXML = (xmlString: string): ParsedData | null => {
     try {
@@ -101,10 +104,7 @@ const ImportMedicationsDialog = ({ open, onOpenChange, onSuccess }: ImportMedica
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     if (!file.name.endsWith('.xml')) {
       toast({
         title: "Invalid File",
@@ -150,6 +150,36 @@ const ImportMedicationsDialog = ({ open, onOpenChange, onSuccess }: ImportMedica
         variant: "destructive",
       });
     }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleClickUpload = () => {
+    fileInputRef.current?.click();
   };
 
   const handleImport = async () => {
@@ -269,21 +299,30 @@ const ImportMedicationsDialog = ({ open, onOpenChange, onSuccess }: ImportMedica
 
         {step === 'upload' && (
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-12 text-center">
+            <div 
+              className={cn(
+                "border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors",
+                isDragging 
+                  ? "border-primary bg-primary/5" 
+                  : "border-border hover:border-primary/50 hover:bg-accent/50"
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={handleClickUpload}
+            >
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <Label htmlFor="xml-upload" className="cursor-pointer">
-                <div className="text-lg font-medium text-foreground mb-2">
-                  Upload XML File
-                </div>
-                <div className="text-sm text-muted-foreground mb-4">
-                  Click to select an XML file containing medication data
-                </div>
-                <Button type="button" variant="secondary">
-                  Choose File
-                </Button>
-              </Label>
+              <div className="text-lg font-medium text-foreground mb-2">
+                Upload XML File
+              </div>
+              <div className="text-sm text-muted-foreground mb-4">
+                {isDragging ? "Drop file here" : "Click to select or drag and drop an XML file"}
+              </div>
+              <Button type="button" variant="secondary" onClick={(e) => e.stopPropagation()}>
+                Choose File
+              </Button>
               <input
-                id="xml-upload"
+                ref={fileInputRef}
                 type="file"
                 accept=".xml"
                 onChange={handleFileUpload}
