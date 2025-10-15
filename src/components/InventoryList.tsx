@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Edit, Eye, AlertTriangle } from "lucide-react";
+import { Search, Plus, Edit, Eye, AlertTriangle, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AddMedicationDialog from "./AddMedicationDialog";
+import ImportMedicationsDialog from "./ImportMedicationsDialog";
 import EditStockDialog from "./EditStockDialog";
 import ViewMedicationDialog from "./ViewMedicationDialog";
 
@@ -17,6 +18,7 @@ const InventoryList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -84,15 +86,27 @@ const InventoryList = () => {
           <p className="text-muted-foreground">Manage your medication stock and inventory</p>
         </div>
         
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-gradient-primary">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Medication
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsImportDialogOpen(true)} variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Import from XML
+          </Button>
+          <Button onClick={() => setIsAddDialogOpen(true)} className="bg-gradient-primary">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Medication
+          </Button>
+        </div>
       </div>
 
       <AddMedicationDialog 
         open={isAddDialogOpen} 
         onOpenChange={setIsAddDialogOpen}
+        onSuccess={fetchInventory}
+      />
+
+      <ImportMedicationsDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
         onSuccess={fetchInventory}
       />
 
