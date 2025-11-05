@@ -63,7 +63,10 @@ const NotificationsManager = () => {
       fetchUserProfile();
       fetchNotifications();
       fetchProfiles();
-      setupRealtimeSubscription();
+      const cleanup = setupRealtimeSubscription();
+      return () => {
+        cleanup && cleanup();
+      };
     }
   }, [user]);
 
@@ -85,18 +88,25 @@ const NotificationsManager = () => {
 
   const fetchProfiles = async () => {
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization')
-        .eq('user_id', user?.id)
-        .single();
+      let org = userOrg;
 
-      if (!profile) return;
+      if (!org) {
+        const { data: profile, error: orgError } = await supabase
+          .from('profiles')
+          .select('organization')
+          .eq('user_id', user?.id)
+          .maybeSingle();
+
+        if (orgError && orgError.code !== 'PGRST116') throw orgError;
+        org = profile?.organization || '';
+        if (org && !userOrg) setUserOrg(org);
+        if (!org) return;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
         .select('user_id, full_name, email, role')
-        .eq('organization', profile.organization)
+        .eq('organization', org)
         .neq('user_id', user?.id);
 
       if (error) throw error;
@@ -426,7 +436,7 @@ const NotificationsManager = () => {
                         rows={4}
                       />
                     </div>
-                    <Button onClick={sendDirectMessage} className="w-full">
+                    <Button onClick={sendDirectMessage} className="w-full" disabled={!selectedUser || !dmTitle || !dmMessage || !userOrg}>
                       <Send className="h-4 w-4 mr-2" />
                       Send Message
                     </Button>
@@ -506,7 +516,7 @@ const NotificationsManager = () => {
                         rows={4}
                       />
                     </div>
-                    <Button onClick={sendBroadcast} className="w-full">
+                    <Button onClick={sendBroadcast} className="w-full" disabled={!userOrg || !broadcastTitle || !broadcastMessage || (broadcastType === 'custom' && selectedStaff.length === 0)}>
                       <Radio className="h-4 w-4 mr-2" />
                       Send Broadcast
                     </Button>
