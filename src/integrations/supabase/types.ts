@@ -587,6 +587,10 @@ export type Database = {
     }
     Functions: {
       get_user_organization: { Args: { _user_id: string }; Returns: string }
+      get_user_organization_safe: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _organization: string
