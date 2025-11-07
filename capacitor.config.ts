@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.388177bfde6e424d9006e0f8ce7e9950',
+  appId: 'com.lovable.pillguardianplus',
   appName: 'pill-guardian-plus',
   webDir: 'dist',
   server: {
