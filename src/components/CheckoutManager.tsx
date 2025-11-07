@@ -248,24 +248,24 @@ const CheckoutManager = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex items-center gap-2">
-        <ShoppingCart className="h-6 w-6" />
-        <h2 className="text-2xl font-bold">Checkout</h2>
+        <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
+        <h2 className="text-xl md:text-2xl font-bold">Checkout</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left side - Medication selection */}
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Scan or Search Medication</CardTitle>
-              <CardDescription>Use barcode scanner or search by name</CardDescription>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">Scan or Search Medication</CardTitle>
+              <CardDescription className="text-sm">Use barcode scanner or search by name</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 md:p-6 pt-0">
               <div className="space-y-2">
-                <Label>Barcode Scanner</Label>
-                <div className="flex gap-2">
+                <Label className="text-sm">Barcode Scanner</Label>
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     ref={barcodeInputRef}
                     value={barcodeInput}
@@ -278,18 +278,21 @@ const CheckoutManager = () => {
                     placeholder="Scan or enter barcode"
                     className="flex-1"
                   />
-                  <Button onClick={() => handleBarcodeSearch()} variant="outline">
-                    <Scan className="h-4 w-4 mr-2" />
-                    Search
-                  </Button>
-                  <Button 
-                    onClick={handleCameraScan} 
-                    disabled={isScanning}
-                    variant="default"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {isScanning ? 'Scanning...' : 'Camera'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => handleBarcodeSearch()} variant="outline" className="flex-1 sm:flex-none">
+                      <Scan className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:inline">Search</span>
+                    </Button>
+                    <Button 
+                      onClick={handleCameraScan} 
+                      disabled={isScanning}
+                      variant="default"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Camera className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:inline">{isScanning ? 'Scanning...' : 'Camera'}</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -341,72 +344,123 @@ const CheckoutManager = () => {
 
           {/* Cart */}
           <Card>
-            <CardHeader>
-              <CardTitle>Cart ({cart.length} items)</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">Cart ({cart.length} items)</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-0">
               {cart.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Cart is empty</p>
+                <p className="text-center text-muted-foreground py-8 text-sm">Cart is empty</p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Medication</TableHead>
-                      <TableHead className="text-center">Quantity</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <div className="space-y-3">
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-3">
                     {cart.map(item => (
-                      <TableRow key={item.medication.id}>
-                        <TableCell>
-                          <div className="font-medium">{item.medication.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {item.medication.generic_name}
+                      <div key={item.medication.id} className="border rounded-lg p-3 space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 pr-2">
+                            <div className="font-medium text-sm">{item.medication.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {item.medication.generic_name}
+                            </div>
+                            <div className="text-sm font-medium mt-1">
+                              ${item.medication.price.toFixed(2)} × {item.quantity} = ${(item.medication.price * item.quantity).toFixed(2)}
+                            </div>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(item.medication.id, -1)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="w-12 text-center">{item.quantity}</span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(item.medication.id, 1)}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          ${item.medication.price.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          ${(item.medication.price * item.quantity).toFixed(2)}
-                        </TableCell>
-                        <TableCell>
                           <Button
                             variant="ghost"
                             size="icon"
+                            className="h-8 w-8 shrink-0"
                             onClick={() => removeFromCart(item.medication.id)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => updateQuantity(item.medication.id, -1)}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-12 text-center font-medium">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => updateQuantity(item.medication.id, 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Medication</TableHead>
+                          <TableHead className="text-center">Quantity</TableHead>
+                          <TableHead className="text-right">Price</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cart.map(item => (
+                          <TableRow key={item.medication.id}>
+                            <TableCell>
+                              <div className="font-medium">{item.medication.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {item.medication.generic_name}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => updateQuantity(item.medication.id, -1)}
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                                <span className="w-12 text-center">{item.quantity}</span>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => updateQuantity(item.medication.id, 1)}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              ${item.medication.price.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ${(item.medication.price * item.quantity).toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeFromCart(item.medication.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -415,10 +469,10 @@ const CheckoutManager = () => {
         {/* Right side - Checkout details */}
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Checkout Details</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg md:text-xl">Checkout Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 md:p-6 pt-0">
               <div className="space-y-2">
                 <Label>Customer (Optional)</Label>
                 <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
