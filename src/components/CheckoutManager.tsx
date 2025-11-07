@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, Scan, Plus, Minus, Trash2, DollarSign, Search } from 'lucide-react';
+import { ShoppingCart, Scan, Plus, Minus, Trash2, DollarSign, Search, Camera } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
 
 interface Medication {
   id: string;
@@ -35,6 +36,7 @@ interface CartItem {
 const CheckoutManager = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isScanning, startScan } = useBarcodeScanner();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -87,10 +89,11 @@ const CheckoutManager = () => {
     }
   };
 
-  const handleBarcodeSearch = () => {
-    if (!barcodeInput.trim()) return;
+  const handleBarcodeSearch = (barcode?: string) => {
+    const searchBarcode = barcode || barcodeInput.trim();
+    if (!searchBarcode) return;
 
-    const medication = medications.find(m => m.barcode === barcodeInput.trim());
+    const medication = medications.find(m => m.barcode === searchBarcode);
     
     if (medication) {
       addToCart(medication);
@@ -106,6 +109,12 @@ const CheckoutManager = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleCameraScan = async () => {
+    await startScan((barcode) => {
+      handleBarcodeSearch(barcode);
+    });
   };
 
   const addToCart = (medication: Medication) => {
@@ -254,26 +263,33 @@ const CheckoutManager = () => {
               <CardDescription>Use barcode scanner or search by name</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label>Barcode</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      ref={barcodeInputRef}
-                      value={barcodeInput}
-                      onChange={(e) => setBarcodeInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleBarcodeSearch();
-                        }
-                      }}
-                      placeholder="Scan or enter barcode"
-                    />
-                    <Button onClick={handleBarcodeSearch}>
-                      <Scan className="h-4 w-4 mr-2" />
-                      Search
-                    </Button>
-                  </div>
+              <div className="space-y-2">
+                <Label>Barcode Scanner</Label>
+                <div className="flex gap-2">
+                  <Input
+                    ref={barcodeInputRef}
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleBarcodeSearch();
+                      }
+                    }}
+                    placeholder="Scan or enter barcode"
+                    className="flex-1"
+                  />
+                  <Button onClick={() => handleBarcodeSearch()} variant="outline">
+                    <Scan className="h-4 w-4 mr-2" />
+                    Search
+                  </Button>
+                  <Button 
+                    onClick={handleCameraScan} 
+                    disabled={isScanning}
+                    variant="default"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    {isScanning ? 'Scanning...' : 'Camera'}
+                  </Button>
                 </div>
               </div>
 

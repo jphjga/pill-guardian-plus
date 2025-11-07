@@ -14,21 +14,24 @@
 8. [Security Model](#security-model)
 9. [Features & Modules](#features--modules)
 10. [API Integration](#api-integration)
-11. [Deployment](#deployment)
-12. [Development Setup](#development-setup)
+11. [Mobile & Native Features](#mobile--native-features)
+12. [Deployment](#deployment)
+13. [Development Setup](#development-setup)
 
 ---
 
 ## Executive Summary
 
-PharmaCare is a comprehensive pharmacy inventory management system built with modern web technologies. The application provides a multi-tenant, role-based platform for managing medications, inventory, customers, orders, and sales operations. It features real-time notifications, alerts management, and comprehensive reporting capabilities.
+PharmaCare is a comprehensive pharmacy inventory management system built with modern web technologies. The application provides a multi-tenant, role-based platform for managing medications, inventory, customers, orders, and sales operations. It features real-time notifications, alerts management, native mobile capabilities with barcode scanning, and comprehensive reporting capabilities.
 
 **Key Capabilities:**
 - Multi-tenant organization support
 - Role-based access control (Administrator, Manager, Pharmacist, Technician)
 - Real-time inventory tracking with low-stock alerts
 - Customer/Patient management with medical history
-- Point-of-sale checkout system
+- Point-of-sale checkout system with barcode scanning
+- Native mobile app support (iOS & Android)
+- Camera-based medication lookup via barcode
 - Prescription order management
 - Internal notifications and system alerts
 - Comprehensive dashboard with analytics
@@ -55,6 +58,12 @@ PharmaCare is a comprehensive pharmacy inventory management system built with mo
 - **Authentication:** Supabase Auth
 - **Real-time:** Supabase Realtime
 - **API:** Supabase Auto-generated REST API
+
+### Mobile & Native
+- **Framework:** Capacitor 6+
+- **Barcode Scanning:** @capacitor-mlkit/barcode-scanning
+- **Platform Support:** iOS, Android
+- **Native Capabilities:** Camera access, device storage, network detection
 
 ### Development Tools
 - **Package Manager:** npm
@@ -1187,6 +1196,154 @@ try {
   });
 }
 ```
+
+---
+
+## Mobile & Native Features
+
+### Capacitor Integration
+
+The application includes native mobile capabilities through **Capacitor**, enabling deployment as native iOS and Android applications while maintaining a single codebase.
+
+#### Configuration
+```typescript
+// capacitor.config.ts
+{
+  appId: 'app.lovable.388177bfde6e424d9006e0f8ce7e9950',
+  appName: 'pill-guardian-plus',
+  webDir: 'dist',
+  server: {
+    url: 'https://388177bf-de6e-424d-9006-e0f8ce7e9950.lovableproject.com',
+    cleartext: true  // For development hot-reload
+  },
+  plugins: {
+    BarcodeScanner: {
+      // Camera permission configuration
+    }
+  }
+}
+```
+
+### Barcode Scanning Feature
+
+**Plugin:** `@capacitor-mlkit/barcode-scanning`  
+**Purpose:** Enable camera-based barcode scanning for rapid medication lookup and checkout
+
+#### Implementation
+
+**Custom Hook:** `useBarcodeScanner`
+```typescript
+// src/hooks/useBarcodeScanner.ts
+export const useBarcodeScanner = () => {
+  const [isScanning, setIsScanning] = useState(false);
+
+  const startScan = async (onBarcodeDetected: (barcode: string) => void) => {
+    // Check device support
+    const { supported } = await BarcodeScanner.isSupported();
+    
+    // Request camera permissions
+    const { camera } = await BarcodeScanner.requestPermissions();
+    
+    // Start scanning
+    const result = await BarcodeScanner.scan();
+    if (result.barcodes?.length > 0) {
+      onBarcodeDetected(result.barcodes[0].rawValue);
+    }
+  };
+
+  return { isScanning, startScan, stopScan };
+};
+```
+
+#### Features
+- **Real-time camera scanning:** Uses device camera for barcode detection
+- **Permission management:** Automatic camera permission requests
+- **Device support detection:** Checks if barcode scanning is available
+- **Medication lookup:** Automatically searches medications by barcode
+- **Cart integration:** Adds scanned medications directly to checkout cart
+- **Stock verification:** Shows current stock levels for scanned items
+- **Toast notifications:** User feedback for scan success/failure
+
+#### Usage in Components
+```typescript
+// CheckoutManager.tsx
+const { isScanning, startScan } = useBarcodeScanner();
+
+const handleCameraScan = async () => {
+  await startScan((barcode) => {
+    // Find medication by barcode
+    const medication = medications.find(m => m.barcode === barcode);
+    if (medication) {
+      addToCart(medication);
+      toast.success('Medication added to cart');
+    }
+  });
+};
+```
+
+#### UI Integration
+- **Camera button** in checkout interface
+- **Scan icon** for visual clarity
+- **Loading state** during active scanning
+- **Responsive design** for mobile devices
+
+### Mobile Deployment Process
+
+1. **Setup Development Environment**
+   ```bash
+   # Export project to GitHub
+   git clone <repository-url>
+   cd pill-guardian-plus
+   npm install
+   ```
+
+2. **Initialize Native Platforms**
+   ```bash
+   # Add iOS platform (requires macOS + Xcode)
+   npx cap add ios
+   
+   # Add Android platform (requires Android Studio)
+   npx cap add android
+   ```
+
+3. **Update Dependencies**
+   ```bash
+   # Update native platform dependencies
+   npx cap update ios
+   npx cap update android
+   ```
+
+4. **Build & Sync**
+   ```bash
+   # Build web assets
+   npm run build
+   
+   # Sync with native platforms
+   npx cap sync
+   ```
+
+5. **Run on Device/Emulator**
+   ```bash
+   # iOS (requires Mac + Xcode)
+   npx cap run ios
+   
+   # Android (requires Android Studio)
+   npx cap run android
+   ```
+
+#### Platform Requirements
+- **iOS:** macOS with Xcode installed
+- **Android:** Android Studio with SDK tools
+- **Camera permissions:** Configured in native platform files
+- **Hot reload:** Enabled via server URL in config
+
+### Native Capabilities Available
+- ✅ Camera access for barcode scanning
+- ✅ Device storage
+- ✅ Network detection
+- ✅ Push notifications (can be added)
+- ✅ Geolocation (can be added)
+- ✅ File system access (can be added)
 
 ---
 
