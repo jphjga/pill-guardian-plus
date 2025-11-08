@@ -8,9 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart, Scan, Plus, Minus, Trash2, DollarSign, Search, Camera } from 'lucide-react';
+import { ShoppingCart, Scan, Plus, Minus, Trash2, DollarSign, Search, Camera, Printer, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner';
+import { useReceiptPrinter } from '@/hooks/useReceiptPrinter';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface Medication {
   id: string;
@@ -37,6 +39,7 @@ const CheckoutManager = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { isScanning, startScan } = useBarcodeScanner();
+  const { printReceipt, downloadReceipt } = useReceiptPrinter();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -46,6 +49,7 @@ const CheckoutManager = () => {
   const [processing, setProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [completedSaleId, setCompletedSaleId] = useState<string | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -225,6 +229,9 @@ const CheckoutManager = () => {
         description: `Sale completed. Total: $${calculateTotal().toFixed(2)}`,
       });
 
+      // Show receipt dialog
+      setCompletedSaleId(sale.id);
+
       // Reset form
       setCart([]);
       setSelectedCustomer('');
@@ -247,12 +254,43 @@ const CheckoutManager = () => {
     med.brand_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handlePrintReceipt = async () => {
+    if (!completedSaleId) return;
+    try {
+      await printReceipt(completedSaleId);
+    } catch (error: any) {
+      toast({
+        title: 'Print error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!completedSaleId) return;
+    try {
+      await downloadReceipt(completedSaleId);
+      toast({
+        title: 'Receipt downloaded',
+        description: 'PDF receipt has been saved',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Download error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex items-center gap-2">
-        <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
-        <h2 className="text-xl md:text-2xl font-bold">Checkout</h2>
-      </div>
+    <>
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex items-center gap-2">
+          <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
+          <h2 className="text-xl md:text-2xl font-bold">Checkout</h2>
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Left side - Medication selection */}
@@ -535,7 +573,41 @@ const CheckoutManager = () => {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+
+      {/* Receipt Dialog */}
+      <AlertDialog open={!!completedSaleId} onOpenChange={(open) => !open && setCompletedSaleId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sale Completed!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Would you like to print or download a receipt for this sale?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadReceipt}
+              className="w-full sm:w-auto"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePrintReceipt}
+              className="w-full sm:w-auto"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Print Receipt
+            </Button>
+            <AlertDialogAction className="w-full sm:w-auto">
+              Close
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
