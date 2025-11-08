@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AIInsightsPanel from "@/components/AIInsightsPanel";
 
 interface DashboardProps {
   onPageChange: (page: string) => void;
@@ -187,6 +188,9 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
           );
         })}
       </div>
+
+      {/* AI Insights Panel */}
+      <AIInsightsPanel />
 
       <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         {/* Low Stock Alerts */}

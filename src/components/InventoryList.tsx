@@ -12,6 +12,7 @@ import AddMedicationDialog from "./AddMedicationDialog";
 import ImportMedicationsDialog from "./ImportMedicationsDialog";
 import EditStockDialog from "./EditStockDialog";
 import ViewMedicationDialog from "./ViewMedicationDialog";
+import AIRecommendations from "./AIRecommendations";
 
 const InventoryList = () => {
   const { toast } = useToast();
@@ -122,6 +123,9 @@ const InventoryList = () => {
         onOpenChange={setIsViewDialogOpen}
         inventoryItem={selectedItem}
       />
+
+      {/* AI Recommendations */}
+      <AIRecommendations />
 
       {/* Filters */}
       <Card className="shadow-card">

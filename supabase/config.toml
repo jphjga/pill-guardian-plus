@@ -1,1 +1,7 @@
 project_id = "nzfbhrzhhntwnuopjcxz"
+
+[functions.ai-stock-recommendations]
+verify_jwt = true
+
+[functions.ai-insights]
+verify_jwt = true
