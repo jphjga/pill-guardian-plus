@@ -74,10 +74,12 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
         .from('customers')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch total sales
-      const { count: salesCount } = await supabase
+      // Fetch total sales revenue
+      const { data: salesData } = await supabase
         .from('sales')
-        .select('*', { count: 'exact', head: true });
+        .select('total_amount');
+      
+      const totalRevenue = salesData?.reduce((sum, sale) => sum + (Number(sale.total_amount) || 0), 0) || 0;
 
       // Fetch recent alerts
       const { data: alertsData } = await supabase
@@ -90,7 +92,7 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
         totalMedications: medicationCount || 0,
         lowStockItems: lowStockData?.length || 0,
         totalCustomers: customerCount || 0,
-        totalSales: salesCount || 0,
+        totalSales: totalRevenue,
       });
 
       setRecentAlerts(alertsData || []);
@@ -127,7 +129,7 @@ const Dashboard = ({ onPageChange }: DashboardProps) => {
     },
     {
       title: "Total Sales",
-      value: stats.totalSales.toString(),
+      value: `$${stats.totalSales.toFixed(2)}`,
       icon: DollarSign,
       color: "text-success"
     }
