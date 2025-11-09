@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -122,6 +123,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
                 </span>
               )}
             </div>
+            <ThemeToggle />
             <div 
               className="h-7 w-7 md:h-8 md:w-8 bg-primary/10 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/20 transition-colors"
               onClick={() => navigate('/profile')}
