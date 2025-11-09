@@ -53,9 +53,12 @@ All colors MUST be HSL.
     --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 3%));
     
-    /* Shadows */
-    --shadow-card: 0 4px 6px -1px hsl(210 40% 80% / 0.1), 0 2px 4px -1px hsl(210 40% 80% / 0.06);
-    --shadow-elevated: 0 10px 25px -3px hsl(210 40% 80% / 0.1), 0 4px 6px -2px hsl(210 40% 80% / 0.05);
+    /* Shadows & Glows */
+    --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
+    --shadow-elevated: 0 10px 25px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.3);
+    --glow-primary: 0 0 20px hsl(210 83% 53% / 0.3), 0 0 40px hsl(210 83% 53% / 0.1);
+    --glow-subtle: 0 0 30px hsl(0 0% 100% / 0.05), inset 0 1px 1px hsl(0 0% 100% / 0.1);
+    --border-glow: 0 0 10px hsl(210 83% 53% / 0.5);
 
     --radius: 0.5rem;
 
@@ -122,5 +125,36 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Glassmorphism effect for cards */
+  .card,
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"] {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+    box-shadow: var(--glow-subtle);
+  }
+
+  /* Enhanced input glassmorphism */
+  input,
+  textarea,
+  select {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* Glow effect for focused elements */
+  input:focus,
+  textarea:focus,
+  button:focus-visible {
+    box-shadow: var(--border-glow);
+  }
+
+  /* Primary button glow */
+  button[data-variant="default"]:not(:disabled) {
+    box-shadow: var(--glow-primary);
   }
 }

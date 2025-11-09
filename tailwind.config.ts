@@ -80,6 +80,13 @@ export default {
       boxShadow: {
         'card': 'var(--shadow-card)',
         'elevated': 'var(--shadow-elevated)',
+        'glow-primary': 'var(--glow-primary)',
+        'glow-subtle': 'var(--glow-subtle)',
+        'border-glow': 'var(--border-glow)',
+      },
+      backdropBlur: {
+        'glass': '20px',
+        'glass-sm': '10px',
       },
       borderRadius: {
         lg: "var(--radius)",
