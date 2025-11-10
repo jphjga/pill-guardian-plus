@@ -1,4 +1,4 @@
-import { Pill, Package, AlertTriangle, TrendingUp, Users, Bell, User, ShoppingCart, Menu, X } from "lucide-react";
+import { Pill, Package, AlertTriangle, TrendingUp, Users, Bell, User, ShoppingCart, Menu, X, HelpCircle, FileText, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,7 +73,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
     };
   }, [user]);
   
-  const navigationItems = [
+  const mainNavigationItems = [
     { id: "dashboard", label: "Dashboard", icon: TrendingUp },
     { id: "checkout", label: "Checkout", icon: ShoppingCart },
     { id: "inventory", label: "Inventory", icon: Package },
@@ -137,26 +137,56 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
       <div className="flex">
         {/* Sidebar - Desktop */}
         <aside className="hidden md:block w-52 lg:w-56 border-r bg-card shadow-card fixed left-0 top-14 md:top-16 bottom-0 overflow-y-auto">
-          <nav className="space-y-2 p-3 lg:p-4">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Button
-                  key={item.id}
-                  variant={currentPage === item.id ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base",
-                    currentPage === item.id 
-                      ? "bg-gradient-primary text-primary-foreground shadow-sm" 
-                      : "hover:bg-muted"
-                  )}
-                  onClick={() => onPageChange(item.id)}
-                >
-                  <Icon className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
-                  {item.label}
-                </Button>
-              );
-            })}
+          <nav className="flex flex-col h-full">
+            <div className="flex-1 space-y-2 p-3 lg:p-4">
+              {mainNavigationItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.id}
+                    variant={currentPage === item.id ? "default" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base",
+                      currentPage === item.id 
+                        ? "bg-gradient-primary text-primary-foreground shadow-sm" 
+                        : "hover:bg-muted"
+                    )}
+                    onClick={() => onPageChange(item.id)}
+                  >
+                    <Icon className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
+                    {item.label}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            {/* Bottom Navigation */}
+            <div className="border-t p-3 lg:p-4 space-y-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base hover:bg-muted"
+                onClick={() => navigate('/help')}
+              >
+                <HelpCircle className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
+                Help
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base hover:bg-muted"
+                onClick={() => navigate('/about')}
+              >
+                <FileText className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
+                About
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base hover:bg-muted"
+                onClick={() => navigate('/terms')}
+              >
+                <Shield className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
+                Terms
+              </Button>
+            </div>
           </nav>
         </aside>
 
@@ -167,9 +197,9 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
               className="absolute inset-0 bg-background/80 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <aside className="absolute left-0 top-14 bottom-0 w-64 border-r bg-card shadow-card">
-              <nav className="space-y-2 p-4">
-                {navigationItems.map((item) => {
+            <aside className="absolute left-0 top-14 bottom-0 w-64 border-r bg-card shadow-card flex flex-col">
+              <nav className="flex-1 space-y-2 p-4 overflow-y-auto">
+                {mainNavigationItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Button
@@ -192,6 +222,43 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
                   );
                 })}
               </nav>
+              
+              {/* Bottom Navigation */}
+              <div className="border-t p-4 space-y-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-11 hover:bg-muted"
+                  onClick={() => {
+                    navigate('/help');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  Help
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-11 hover:bg-muted"
+                  onClick={() => {
+                    navigate('/about');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <FileText className="h-5 w-5" />
+                  About
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-11 hover:bg-muted"
+                  onClick={() => {
+                    navigate('/terms');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <Shield className="h-5 w-5" />
+                  Terms
+                </Button>
+              </div>
             </aside>
           </div>
         )}
