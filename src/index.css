@@ -8,13 +8,78 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 210 83% 53%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 210 83% 53%;
+
+    /* Custom pharmacy system colors */
+    --medical-blue: 210 83% 53%;
+    --medical-green: 142 76% 36%;
+    --medical-light: 210 20% 98%;
+    --medical-dark: 215 25% 27%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 83% 53%), hsl(210 83% 43%));
+    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 98%), hsl(210 40% 98%));
+    
+    /* Shadows & Glows */
+    --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.1), 0 1px 2px 0 hsl(0 0% 0% / 0.06);
+    --shadow-elevated: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -2px hsl(0 0% 0% / 0.05);
+    --glow-primary: 0 0 20px hsl(210 83% 53% / 0.3), 0 0 40px hsl(210 83% 53% / 0.1);
+    --glow-subtle: 0 0 30px hsl(0 0% 0% / 0.02), inset 0 1px 1px hsl(0 0% 100% / 0.5);
+    --border-glow: 0 0 10px hsl(210 83% 53% / 0.5);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 210 83% 53%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 210 83% 53%;
+  }
+
+  .dark {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
 
-    --card: 0 0% 100% / 0.1;
+    --card: 0 0% 100% / 0.05;
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100% / 0.1;
+    --popover: 0 0% 100% / 0.05;
     --popover-foreground: 0 0% 100%;
 
     --primary: 210 83% 53%;
@@ -42,78 +107,21 @@ All colors MUST be HSL.
     --input: 0 0% 100% / 0.08;
     --ring: 210 83% 53%;
 
-    /* Custom pharmacy system colors */
-    --medical-blue: 210 83% 53%;
-    --medical-green: 142 76% 36%;
-    --medical-light: 210 20% 98%;
-    --medical-dark: 215 25% 27%;
-    
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 83% 53%), hsl(210 83% 43%));
-    --gradient-secondary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 0%), hsl(0 0% 3%));
     
     /* Shadows & Glows */
     --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
     --shadow-elevated: 0 10px 25px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.3);
-    --glow-primary: 0 0 20px hsl(210 83% 53% / 0.3), 0 0 40px hsl(210 83% 53% / 0.1);
     --glow-subtle: 0 0 30px hsl(0 0% 100% / 0.05), inset 0 1px 1px hsl(0 0% 100% / 0.1);
-    --border-glow: 0 0 10px hsl(210 83% 53% / 0.5);
-
-    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100% / 0.05;
-
     --sidebar-foreground: 0 0% 100%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 0 0% 100% / 0.1;
-
     --sidebar-accent-foreground: 0 0% 100%;
-
     --sidebar-border: 0 0% 100% / 0.15;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -127,21 +135,21 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
-  /* Glassmorphism effect for cards */
-  .card,
-  [role="dialog"],
-  [role="menu"],
-  [role="listbox"] {
+  /* Glassmorphism effect for cards - only in dark mode */
+  .dark .card,
+  .dark [role="dialog"],
+  .dark [role="menu"],
+  .dark [role="listbox"] {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid hsl(0 0% 100% / 0.1);
     box-shadow: var(--glow-subtle);
   }
 
-  /* Enhanced input glassmorphism */
-  input,
-  textarea,
-  select {
+  /* Enhanced input glassmorphism - only in dark mode */
+  .dark input,
+  .dark textarea,
+  .dark select {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }

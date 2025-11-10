@@ -136,7 +136,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
 
       <div className="flex">
         {/* Sidebar - Desktop */}
-        <aside className="hidden md:block w-56 lg:w-64 border-r bg-card shadow-card min-h-[calc(100vh-4rem)]">
+        <aside className="hidden md:block w-52 lg:w-56 border-r bg-card shadow-card fixed left-0 top-14 md:top-16 bottom-0 overflow-y-auto">
           <nav className="space-y-2 p-3 lg:p-4">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -197,7 +197,7 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-3 md:p-6 max-w-full overflow-x-hidden">
+        <main className="flex-1 p-3 md:p-6 max-w-full overflow-x-hidden md:ml-52 lg:ml-56">
           {children}
         </main>
       </div>
