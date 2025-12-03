@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import RegisterOrganization from "./pages/RegisterOrganization";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
@@ -26,6 +27,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/register-organization" element={<RegisterOrganization />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/about" element={<About />} />
               <Route path="/terms" element={<Terms />} />

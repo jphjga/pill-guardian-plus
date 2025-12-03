@@ -1,19 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Pill, Building2, Plus, Shield, Users, TrendingUp, Activity } from 'lucide-react';
+import { Pill, Shield, Users, TrendingUp, Activity, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 
 const Auth = () => {
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const { toast } = useToast();
   
   const [signInData, setSignInData] = useState({
@@ -21,19 +17,7 @@ const Auth = () => {
     password: '',
   });
   
-  const [signUpData, setSignUpData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
-    organization: '',
-    role: '',
-    isNewOrganization: false,
-    agreedToTerms: false,
-  });
-  
   const [loading, setLoading] = useState(false);
-  const [existingOrganizations, setExistingOrganizations] = useState<string[]>([]);
-  const [showCustomOrganization, setShowCustomOrganization] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,83 +34,6 @@ const Auth = () => {
     }
     
     setLoading(false);
-  };
-
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('organization');
-      
-      if (!error && data) {
-        const orgs = [...new Set(
-          data
-            .map(item => item.organization)
-            .filter(org => org && org.trim() !== '')
-        )];
-        setExistingOrganizations(orgs);
-      }
-    };
-    
-    fetchOrganizations();
-  }, []);
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!signUpData.agreedToTerms) {
-      toast({
-        title: 'Terms Required',
-        description: 'Please agree to the Terms and Conditions to continue.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setLoading(true);
-    
-    const { error } = await signUp(
-      signUpData.email, 
-      signUpData.password, 
-      signUpData.fullName, 
-      signUpData.organization,
-      signUpData.role || (signUpData.isNewOrganization ? 'administrator' : 'pharmacist')
-    );
-    
-    if (error) {
-      toast({
-        title: 'Error signing up',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Account created!',
-        description: 'Please check your email to verify your account.',
-      });
-    }
-    
-    setLoading(false);
-  };
-
-  const handleOrganizationChange = (value: string) => {
-    if (value === 'new-organization') {
-      setShowCustomOrganization(true);
-      setSignUpData({ 
-        ...signUpData, 
-        organization: '',
-        isNewOrganization: true,
-        role: 'administrator'
-      });
-    } else {
-      setShowCustomOrganization(false);
-      setSignUpData({ 
-        ...signUpData, 
-        organization: value,
-        isNewOrganization: false,
-        role: ''
-      });
-    }
   };
 
   return (
@@ -200,7 +107,7 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right Side - Auth Forms */}
+      {/* Right Side - Sign In Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="text-center mb-8 lg:hidden">
@@ -217,178 +124,57 @@ const Auth = () => {
             <CardHeader>
               <CardTitle>Welcome Back</CardTitle>
               <CardDescription>
-                Sign in to your account or create a new one to get started
+                Sign in to your account to continue
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Sign In</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="signin">
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        placeholder="Enter your organization email"
-                        value={signInData.email}
-                        onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password">Password</Label>
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={signInData.password}
-                        onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Signing In...' : 'Sign In'}
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="Enter your organization email"
+                    value={signInData.email}
+                    onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={signInData.password}
+                    onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
+              </form>
+
+              <div className="mt-6 pt-6 border-t">
+                <div className="text-center space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    New organization? Register your pharmacy to get started.
+                  </p>
+                  <Link to="/register-organization">
+                    <Button variant="outline" className="w-full">
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Register New Organization
                     </Button>
-                  </form>
-                </TabsContent>
-                
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Full Name</Label>
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Enter your full name"
-                        value={signUpData.fullName}
-                        onChange={(e) => setSignUpData({ ...signUpData, fullName: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Organization</Label>
-                      <Select onValueChange={handleOrganizationChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select or create organization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {existingOrganizations.map((org) => (
-                            <SelectItem key={org} value={org}>
-                              <div className="flex items-center">
-                                <Building2 className="h-4 w-4 mr-2" />
-                                {org}
-                              </div>
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="new-organization">
-                            <div className="flex items-center">
-                              <Plus className="h-4 w-4 mr-2" />
-                              Create New Organization
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {showCustomOrganization && (
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-organization">New Organization Name</Label>
-                        <div className="relative">
-                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            id="signup-organization"
-                            type="text"
-                            placeholder="Enter your pharmacy name"
-                            className="pl-10"
-                            value={signUpData.organization}
-                            onChange={(e) => setSignUpData({ ...signUpData, organization: e.target.value })}
-                            required
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label>Role</Label>
-                      {signUpData.isNewOrganization ? (
-                        <div className="p-3 bg-muted rounded-md">
-                          <p className="text-sm text-muted-foreground">
-                            As the creator of a new organization, you will be assigned the Administrator role.
-                          </p>
-                        </div>
-                      ) : (
-                        <Select 
-                          value={signUpData.role} 
-                          onValueChange={(value) => setSignUpData({ ...signUpData, role: value })}
-                          disabled={!signUpData.organization || signUpData.isNewOrganization}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pharmacist">Pharmacist</SelectItem>
-                            <SelectItem value="technician">Pharmacy Technician</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="Enter your organization email"
-                        value={signUpData.email}
-                        onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Create a password"
-                        value={signUpData.password}
-                        onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="flex items-start space-x-2">
-                      <Checkbox
-                        id="terms"
-                        checked={signUpData.agreedToTerms}
-                        onCheckedChange={(checked) => 
-                          setSignUpData({ ...signUpData, agreedToTerms: checked as boolean })
-                        }
-                      />
-                      <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-                        I agree to the{' '}
-                        <Link to="/terms" className="text-primary hover:underline" target="_blank">
-                          Terms and Conditions
-                        </Link>
-                      </Label>
-                    </div>
-
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
-                      disabled={loading || !signUpData.organization || (!signUpData.isNewOrganization && !signUpData.role) || !signUpData.agreedToTerms}
-                    >
-                      {loading ? 'Creating Account...' : 'Create Account'}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+                  </Link>
+                </div>
+              </div>
             </CardContent>
           </Card>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Staff accounts are created by your organization's administrator.
+          </p>
         </div>
       </div>
     </div>

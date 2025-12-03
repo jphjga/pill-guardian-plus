@@ -9,6 +9,7 @@ import AlertsManager from "@/components/AlertsManager";
 import CustomerManagement from "@/components/CustomerManagement";
 import NotificationsManager from "@/components/NotificationsManager";
 import CheckoutManager from "@/components/CheckoutManager";
+import StaffManagement from "@/components/StaffManagement";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -52,6 +53,8 @@ const Index = () => {
         return <AlertsManager />;
       case "customers":
         return <CustomerManagement />;
+      case "staff":
+        return <StaffManagement />;
       default:
         return <Dashboard onPageChange={setCurrentPage} />;
     }
