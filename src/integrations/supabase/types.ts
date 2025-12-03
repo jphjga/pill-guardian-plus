@@ -378,6 +378,57 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          address: string | null
+          admin_user_id: string | null
+          created_at: string | null
+          current_account_count: number
+          email: string | null
+          id: string
+          license_number: string | null
+          location: string | null
+          max_accounts: number
+          name: string
+          phone: string | null
+          slug: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          admin_user_id?: string | null
+          created_at?: string | null
+          current_account_count?: number
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          location?: string | null
+          max_accounts?: number
+          name: string
+          phone?: string | null
+          slug: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          admin_user_id?: string | null
+          created_at?: string | null
+          current_account_count?: number
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          location?: string | null
+          max_accounts?: number
+          name?: string
+          phone?: string | null
+          slug?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -586,6 +637,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_add_account: { Args: { org_name: string }; Returns: boolean }
       get_user_organization: { Args: { _user_id: string }; Returns: string }
       get_user_organization_safe: {
         Args: { _user_id: string }
@@ -598,6 +650,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_organization_account_count: {
+        Args: { org_name: string }
+        Returns: undefined
       }
       is_admin_in_organization: {
         Args: { target_org: string }

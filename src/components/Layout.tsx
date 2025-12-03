@@ -1,4 +1,4 @@
-import { Pill, Package, AlertTriangle, TrendingUp, Users, Bell, User, ShoppingCart, Menu, X, HelpCircle, FileText, Shield } from "lucide-react";
+import { Pill, Package, AlertTriangle, TrendingUp, Users, Bell, User, ShoppingCart, Menu, X, HelpCircle, FileText, Shield, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -83,6 +83,11 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
     { id: "customers", label: "Patients", icon: Users },
   ];
 
+  // Add staff management for administrators
+  const adminNavigationItems = userRole === 'administrator' ? [
+    { id: "staff", label: "Staff Management", icon: UserCog },
+  ] : [];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -158,6 +163,32 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
                   </Button>
                 );
               })}
+
+              {/* Admin Navigation Items */}
+              {adminNavigationItems.length > 0 && (
+                <>
+                  <div className="border-t my-2" />
+                  {adminNavigationItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Button
+                        key={item.id}
+                        variant={currentPage === item.id ? "default" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-2 lg:gap-3 h-10 lg:h-11 text-sm lg:text-base",
+                          currentPage === item.id 
+                            ? "bg-gradient-primary text-primary-foreground shadow-sm" 
+                            : "hover:bg-muted"
+                        )}
+                        onClick={() => onPageChange(item.id)}
+                      >
+                        <Icon className="h-4 w-4 lg:h-5 lg:w-5 shrink-0" />
+                        {item.label}
+                      </Button>
+                    );
+                  })}
+                </>
+              )}
             </div>
             
             {/* Bottom Navigation */}
@@ -221,6 +252,35 @@ const Layout = ({ children, currentPage, onPageChange }: LayoutProps) => {
                     </Button>
                   );
                 })}
+
+                {/* Admin Navigation Items - Mobile */}
+                {adminNavigationItems.length > 0 && (
+                  <>
+                    <div className="border-t my-2" />
+                    {adminNavigationItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Button
+                          key={item.id}
+                          variant={currentPage === item.id ? "default" : "ghost"}
+                          className={cn(
+                            "w-full justify-start gap-3 h-11",
+                            currentPage === item.id 
+                              ? "bg-gradient-primary text-primary-foreground shadow-sm" 
+                              : "hover:bg-muted"
+                          )}
+                          onClick={() => {
+                            onPageChange(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <Icon className="h-5 w-5" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </>
+                )}
               </nav>
               
               {/* Bottom Navigation */}
