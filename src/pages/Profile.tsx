@@ -76,9 +76,9 @@ const Profile = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user?.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
@@ -89,6 +89,44 @@ const Profile = () => {
           organization: data.organization || '',
           role: data.role || 'pharmacist',
         });
+      } else {
+        // No profile exists - create one from user metadata
+        const userMetadata = user?.user_metadata;
+        const newProfile = {
+          user_id: user?.id,
+          full_name: userMetadata?.full_name || '',
+          email: user?.email || '',
+          organization: userMetadata?.organization || '',
+          role: userMetadata?.role || 'pharmacist',
+        };
+
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert(newProfile)
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          // Still set from metadata even if insert fails
+          setProfile({
+            full_name: newProfile.full_name,
+            email: newProfile.email,
+            organization: newProfile.organization,
+            role: newProfile.role,
+          });
+        } else if (createdProfile) {
+          setProfile({
+            full_name: createdProfile.full_name || '',
+            email: createdProfile.email || user?.email || '',
+            organization: createdProfile.organization || '',
+            role: createdProfile.role || 'pharmacist',
+          });
+          toast({
+            title: 'Profile Created',
+            description: 'Your profile has been set up.',
+          });
+        }
       }
     } catch (error: any) {
       toast({
