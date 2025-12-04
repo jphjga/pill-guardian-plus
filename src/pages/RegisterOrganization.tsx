@@ -118,36 +118,24 @@ const RegisterOrganization = () => {
     setLoading(true);
     
     try {
-      // First, create the organization
-      const { error: orgError } = await supabase
+      // Step 1: Check if organization name already exists
+      const { data: existingOrg } = await supabase
         .from('organizations')
-        .insert({
-          name: formData.organizationName,
-          slug: generateSlug(formData.organizationName),
-          type: formData.organizationType,
-          location: formData.location,
-          address: formData.address || null,
-          phone: formData.phone || null,
-          email: formData.businessEmail || null,
-          max_accounts: parseInt(formData.maxAccounts),
-          license_number: formData.licenseNumber || null,
-        });
+        .select('id')
+        .eq('name', formData.organizationName)
+        .maybeSingle();
 
-      if (orgError) {
-        if (orgError.code === '23505') {
-          toast({
-            title: 'Organization Exists',
-            description: 'An organization with this name already exists.',
-            variant: 'destructive',
-          });
-        } else {
-          throw orgError;
-        }
+      if (existingOrg) {
+        toast({
+          title: 'Organization Exists',
+          description: 'An organization with this name already exists.',
+          variant: 'destructive',
+        });
         setLoading(false);
         return;
       }
 
-      // Then create the admin user
+      // Step 2: Create the admin user account first
       const redirectUrl = `${window.location.origin}/`;
       
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -164,23 +152,11 @@ const RegisterOrganization = () => {
       });
 
       if (signUpError) {
-        // Rollback organization creation if signup fails
-        await supabase
-          .from('organizations')
-          .delete()
-          .eq('name', formData.organizationName);
-        
         throw signUpError;
       }
 
       // Check if this was a repeated signup (user already exists)
       if (authData.user && !authData.user.identities?.length) {
-        // User already exists - rollback organization
-        await supabase
-          .from('organizations')
-          .delete()
-          .eq('name', formData.organizationName);
-        
         toast({
           title: 'Account Already Exists',
           description: 'An account with this email already exists. Please use a different email or sign in.',
@@ -190,12 +166,31 @@ const RegisterOrganization = () => {
         return;
       }
 
-      // Update organization with admin user id
-      if (authData.user) {
-        await supabase
-          .from('organizations')
-          .update({ admin_user_id: authData.user.id })
-          .eq('name', formData.organizationName);
+      // Step 3: Create the organization with admin_user_id
+      const { error: orgError } = await supabase
+        .from('organizations')
+        .insert({
+          name: formData.organizationName,
+          slug: generateSlug(formData.organizationName),
+          type: formData.organizationType,
+          location: formData.location,
+          address: formData.address || null,
+          phone: formData.phone || null,
+          email: formData.businessEmail || null,
+          max_accounts: parseInt(formData.maxAccounts),
+          license_number: formData.licenseNumber || null,
+          admin_user_id: authData.user?.id,
+        });
+
+      if (orgError) {
+        console.error('Organization creation error:', orgError);
+        toast({
+          title: 'Registration Failed',
+          description: 'Failed to create organization. Please contact support.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
       }
 
       toast({
