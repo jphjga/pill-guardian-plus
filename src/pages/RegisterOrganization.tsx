@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Pill, Building2, MapPin, Phone, Mail, Users, Shield, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 
 const steps = [
   { id: 1, name: 'Organization Details' },
@@ -399,6 +400,7 @@ const RegisterOrganization = () => {
                 value={formData.adminPassword}
                 onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
               />
+              <PasswordStrengthIndicator password={formData.adminPassword} />
             </div>
 
             <div className="space-y-2">
