@@ -173,6 +173,23 @@ const RegisterOrganization = () => {
         throw signUpError;
       }
 
+      // Check if this was a repeated signup (user already exists)
+      if (authData.user && !authData.user.identities?.length) {
+        // User already exists - rollback organization
+        await supabase
+          .from('organizations')
+          .delete()
+          .eq('name', formData.organizationName);
+        
+        toast({
+          title: 'Account Already Exists',
+          description: 'An account with this email already exists. Please use a different email or sign in.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
       // Update organization with admin user id
       if (authData.user) {
         await supabase
